@@ -1,6 +1,7 @@
 (executable
  (public_name pwopp)
- (name main)
+ (name pwopp)
+ (modes byte exe)
  (libraries pwopp))
 
 (menhir (modules parser))
