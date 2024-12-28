@@ -5,6 +5,7 @@ open Ast
 %token <int> INT
 %token TRUE
 %token FALSE
+%token NONE
 
 %token MULT
 %token DIV
@@ -39,11 +40,11 @@ open Ast
 %%
 
 prog:
-  | e = mixfix; EOF { e }
+  | e = block; EOF { e }
   ;
 
-mixfix:
-  | IF; e1 = mixfix; THEN; e2 = mixfix; ELSE; e3 = mixfix { If(e1, e2, e3) }
+block:
+  | IF; e1 = expr; THEN; e2 = block; ELSE; e3 = block { If(e1, e2, e3) }
   | e = expr { e }
   ;
 
@@ -54,17 +55,19 @@ expr:
   | e1 = expr; DIV; e2 = expr { Binop(e1, Div, e2) }
   | e1 = expr; MULT; e2 = expr { Binop(e1, Mult, e2) }
   | e1 = expr; EQ; e2 = expr { Binop(e1, Eq, e2) }
-  | e1 = expr; AND; e2 = expr { Logic(e1, And, e2) }
-  | e1 = expr; OR; e2 = expr { Logic(e1, Or, e2) }
+  | e1 = expr; AND; e2 = expr { Binop(e1, And, e2) }
+  | e1 = expr; OR; e2 = expr { Binop(e1, Or, e2) }
   | e1 = expr; NEQ; e2 = expr { Binop(e1, Neq, e2) }
   | e1 = expr; LT; e2 = expr { Binop(e1, Lt, e2) }
   | e1 = expr; ELT; e2 = expr { Binop(e1, Elt, e2) }
   | e1 = expr; GT; e2 = expr { Binop(e1, Gt, e2) }
   | e1 = expr; EGT; e2 = expr { Binop(e1, Egt, e2) }
   ;
+  
 base:
   | i = INT { Int i }
-  | LPAREN; e = mixfix; RPAREN { e }
+  | LPAREN; e = block; RPAREN { e }
   | TRUE { Bool true }
   | FALSE { Bool false }
+  | NONE { None }
   ;

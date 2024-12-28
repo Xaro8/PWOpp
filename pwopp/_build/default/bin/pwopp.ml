@@ -19,9 +19,9 @@ let set_fname arg =
     Arg.usage cmd_args_options usage_string;
     exit 2
     
-let include_stdlib prog =
+(* let include_stdlib prog =
   if !use_stdlib then FunStd.include_stdlib prog
-  else prog
+  else prog *)
 
 let run_parser fname (lexbuf : Lexing.lexbuf) =
   Lexing.set_filename lexbuf fname;
@@ -31,7 +31,7 @@ let run_parser fname (lexbuf : Lexing.lexbuf) =
 
 let _ =
   Arg.parse cmd_args_options set_fname usage_string;
-  try
+  (* try *)
     match !fname with
     | None ->
       Arg.usage cmd_args_options usage_string;
@@ -41,10 +41,10 @@ let _ =
         (fun chan ->
           Lexing.from_channel chan
           |> run_parser fname
-          |> include_stdlib
+          (* |> include_stdlib *)
           |> Eval.eval_prog
           |> Eval.print_value)
-  with
+  (* with
   | Eval.MyExn ->
     Printf.eprintf "Unhandled exception!\n";
     exit 1
@@ -60,4 +60,4 @@ let _ =
       pos.pos_lnum
       (pos.pos_cnum - pos.pos_bol + 1)
       tok;
-    exit 1
+    exit 1 *)

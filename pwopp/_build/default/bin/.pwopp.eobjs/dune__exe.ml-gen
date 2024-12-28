@@ -3,6 +3,9 @@
 (** @canonical Dune__exe.Ast *)
 module Ast = Dune__exe__Ast
 
+(** @canonical Dune__exe.Eval *)
+module Eval = Dune__exe__Eval
+
 (** @canonical Dune__exe.Lexer *)
 module Lexer = Dune__exe__Lexer
 

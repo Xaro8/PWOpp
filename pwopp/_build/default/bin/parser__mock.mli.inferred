@@ -4,6 +4,7 @@ type token =
   | RPAREN
   | PLUS
   | OR
+  | NONE
   | NEQ
   | MULT
   | MINUS
@@ -22,7 +23,7 @@ type token =
   | AND
 val menhir_begin_marker : int
 val xv_prog : Ast.expr
-val xv_mixfix : Ast.expr
 val xv_expr : Ast.expr
+val xv_block : Ast.expr
 val xv_base : Ast.expr
 val menhir_end_marker : int

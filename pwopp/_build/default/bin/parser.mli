@@ -7,6 +7,7 @@ type token =
   | RPAREN
   | PLUS
   | OR
+  | NONE
   | NEQ
   | MULT
   | MINUS

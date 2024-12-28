@@ -6,9 +6,9 @@ let white = [' ' '\t']+
 let digit = ['0'-'9']
 let number = '-'? digit+
 
-rule read =
+rule token =
   parse
-  | white { read lexbuf }
+  | white { token lexbuf }
   | "!=" { NEQ }
   | ">" {GT}
   | ">=" {EGT}
@@ -28,5 +28,6 @@ rule read =
   | "/" { DIV }
   | "(" { LPAREN }
   | ")" { RPAREN }
+  | "None" { NONE }
   | number { INT (int_of_string (Lexing.lexeme lexbuf)) } 
   | eof { EOF }
