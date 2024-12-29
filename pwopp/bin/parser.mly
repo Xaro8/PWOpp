@@ -4,9 +4,13 @@ open Ast
 
 %token <int> INT
 %token <float> FLOAT
+%token <string> IDENT
+
 %token TRUE
 %token FALSE
 %token NONE
+
+%token ASSGN
 
 %token MULT
 %token DIV
@@ -44,17 +48,19 @@ open Ast
 %%
 
 prog:
-  | e = stmt; EOF { e }
+  | e = stmts; EOF { e }
   ;
 block:
   | e = expr {Exp e}
-  | SLPAREN; st = stmt; SRPAREN {st}
+  | SLPAREN; st = stmts; SRPAREN {st}
   ;
+stmts:
+  | st = stmt ; ENDL; {st}
+  | st1 = stmt; ENDL; st2 = stmts {Seq (st1,st2)}
 stmt:
-  | e = expr; ENDL; {Exp e}
-  | st1 = stmt; ENDL; st2 = stmt {Seq (st1,st2)}
-  | e = expr; ENDL; st2 = stmt {Seq (Exp(e),st2)}
+  | e = expr {Exp e}
   | IF; e1 = expr; THEN; e2 = block ; ELSE; e3 = block  { If(e1, e2, e3) }
+  | i = IDENT ; ASSGN ; e = expr { Assgn(i,e) }
   ;
 
 expr:
@@ -76,6 +82,7 @@ expr:
 base:
   | i = INT { Int i }
   | f = FLOAT { Float f}
+  | i = IDENT { Var i }
   | LPAREN; e = expr; RPAREN { e }
   | TRUE { Bool true }
   | FALSE { Bool false }

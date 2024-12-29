@@ -1,5 +1,8 @@
 open Ast
 exception Type_error
+exception Unbound_var of string
+module M = Map.Make(String)
+
 
 type value =
   | VNone
@@ -36,20 +39,25 @@ let eval_op op v1 v2 = match op with
  | Neq -> op_eq (<>) v1 v2
  | _ -> raise Type_error
 
-let rec eval_exp =  function 
+let rec eval_exp e env =
+  match e with  
   | Int a -> VInt a
   | Bool b -> VBool b   
   | Float f -> VFloat f
   | None -> VNone
-  | Binop(e1,op,e2) -> eval_op op (eval_exp e1) (eval_exp e2)
-
-let rec eval_stmt st cont = 
+  | Binop(e1,op,e2) -> eval_op op (eval_exp e1 env) (eval_exp e2 env)
+  | Var x -> match M.find_opt x env with
+    | Some v -> v
+    | None -> raise (Unbound_var x)
+  let rec eval_stmt st env cont= 
   match st with
-  | Exp e -> cont (eval_exp e)
-  | Seq(st1,st2) -> eval_stmt (st1) (fun _ -> eval_stmt st2 cont)
-  | If(e,st1,st2) -> eval_stmt (Exp e) (fun v -> if (to_float v) <> 0.0 then eval_stmt st1 cont else eval_stmt st2 cont)
+  | Exp e -> cont (eval_exp e env) env
+  | Seq(st1,st2) -> eval_stmt st1 env (fun _ env -> eval_stmt st2 env cont) 
+  | If(e,st1,st2) -> eval_stmt (Exp e) env (fun v _ -> if (to_float v) <> 0.0 then eval_stmt st1 env cont else eval_stmt st2 env cont)
+  | Assgn (var,e) -> let x = eval_exp e env in 
+    cont x (M.add var x env)  
 
-let eval_prog st = eval_stmt st Fun.id
+let eval_prog st = eval_stmt st (M.empty) (fun v _ -> v)
 let string_of_value v =
   match v with
   | VNone      -> "None"

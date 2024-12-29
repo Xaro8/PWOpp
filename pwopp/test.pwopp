@@ -1,2 +1,7 @@
-2.13 + 5;
-if 1 then { true; } else 2
+x := 2.13 + 5;
+if x > 3 then {
+    x := x - 2;
+} 
+else {
+    x := x + 3;
+}
