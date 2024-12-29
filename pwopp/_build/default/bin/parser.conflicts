@@ -1,5 +1,57 @@
 
-** Conflict (shift/reduce) in state 33.
+** Conflict (shift/reduce) in state 44.
+** Token involved: ENDL
+** This state is reached from prog after reading:
+
+expr ENDL stmt
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+prog 
+stmt EOF 
+(?)
+
+** In state 44, looking ahead at ENDL, shifting is permitted
+** because of the following sub-derivation:
+
+expr ENDL stmt 
+          stmt . ENDL stmt 
+
+** In state 44, looking ahead at ENDL, reducing production
+** stmt -> expr ENDL stmt
+** is permitted because of the following sub-derivation:
+
+stmt ENDL stmt // lookahead token appears
+expr ENDL stmt . 
+
+** Conflict (shift/reduce) in state 41.
+** Token involved: ENDL
+** This state is reached from prog after reading:
+
+stmt ENDL stmt
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+prog 
+stmt EOF 
+(?)
+
+** In state 41, looking ahead at ENDL, shifting is permitted
+** because of the following sub-derivation:
+
+stmt ENDL stmt 
+          stmt . ENDL stmt 
+
+** In state 41, looking ahead at ENDL, reducing production
+** stmt -> stmt ENDL stmt
+** is permitted because of the following sub-derivation:
+
+stmt ENDL stmt // lookahead token appears
+stmt ENDL stmt . 
+
+** Conflict (shift/reduce) in state 32.
 ** Tokens involved: PLUS OR NEQ MULT MINUS LT GT EQ ELT EGT DIV AND
 ** The following explanations concentrate on token PLUS.
 ** This state is reached from prog after reading:
@@ -10,24 +62,24 @@ expr AND expr
 ** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
 
 prog 
-block EOF 
-expr 
+stmt EOF 
+expr ENDL 
 (?)
 
-** In state 33, looking ahead at PLUS, shifting is permitted
+** In state 32, looking ahead at PLUS, shifting is permitted
 ** because of the following sub-derivation:
 
 expr AND expr 
          expr . PLUS expr 
 
-** In state 33, looking ahead at PLUS, reducing production
+** In state 32, looking ahead at PLUS, reducing production
 ** expr -> expr AND expr
 ** is permitted because of the following sub-derivation:
 
 expr PLUS expr // lookahead token appears
 expr AND expr . 
 
-** Conflict (shift/reduce) in state 31.
+** Conflict (shift/reduce) in state 30.
 ** Tokens involved: OR NEQ LT GT EQ ELT EGT AND
 ** The following explanations concentrate on token OR.
 ** This state is reached from prog after reading:
@@ -38,24 +90,24 @@ expr DIV expr
 ** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
 
 prog 
-block EOF 
-expr 
+stmt EOF 
+expr ENDL 
 (?)
 
-** In state 31, looking ahead at OR, reducing production
+** In state 30, looking ahead at OR, reducing production
 ** expr -> expr DIV expr
 ** is permitted because of the following sub-derivation:
 
 expr OR expr // lookahead token appears
 expr DIV expr . 
 
-** In state 31, looking ahead at OR, shifting is permitted
+** In state 30, looking ahead at OR, shifting is permitted
 ** because of the following sub-derivation:
 
 expr DIV expr 
          expr . OR expr 
 
-** Conflict (shift/reduce) in state 29.
+** Conflict (shift/reduce) in state 28.
 ** Tokens involved: PLUS OR NEQ MULT MINUS LT GT EQ ELT EGT DIV AND
 ** The following explanations concentrate on token PLUS.
 ** This state is reached from prog after reading:
@@ -66,24 +118,24 @@ expr EGT expr
 ** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
 
 prog 
-block EOF 
-expr 
+stmt EOF 
+expr ENDL 
 (?)
 
-** In state 29, looking ahead at PLUS, shifting is permitted
+** In state 28, looking ahead at PLUS, shifting is permitted
 ** because of the following sub-derivation:
 
 expr EGT expr 
          expr . PLUS expr 
 
-** In state 29, looking ahead at PLUS, reducing production
+** In state 28, looking ahead at PLUS, reducing production
 ** expr -> expr EGT expr
 ** is permitted because of the following sub-derivation:
 
 expr PLUS expr // lookahead token appears
 expr EGT expr . 
 
-** Conflict (shift/reduce) in state 27.
+** Conflict (shift/reduce) in state 26.
 ** Tokens involved: PLUS OR NEQ MULT MINUS LT GT EQ ELT EGT DIV AND
 ** The following explanations concentrate on token PLUS.
 ** This state is reached from prog after reading:
@@ -94,24 +146,24 @@ expr ELT expr
 ** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
 
 prog 
-block EOF 
-expr 
+stmt EOF 
+expr ENDL 
 (?)
 
-** In state 27, looking ahead at PLUS, shifting is permitted
+** In state 26, looking ahead at PLUS, shifting is permitted
 ** because of the following sub-derivation:
 
 expr ELT expr 
          expr . PLUS expr 
 
-** In state 27, looking ahead at PLUS, reducing production
+** In state 26, looking ahead at PLUS, reducing production
 ** expr -> expr ELT expr
 ** is permitted because of the following sub-derivation:
 
 expr PLUS expr // lookahead token appears
 expr ELT expr . 
 
-** Conflict (shift/reduce) in state 25.
+** Conflict (shift/reduce) in state 24.
 ** Tokens involved: PLUS OR NEQ MULT MINUS LT GT EQ ELT EGT DIV AND
 ** The following explanations concentrate on token PLUS.
 ** This state is reached from prog after reading:
@@ -122,24 +174,24 @@ expr EQ expr
 ** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
 
 prog 
-block EOF 
-expr 
+stmt EOF 
+expr ENDL 
 (?)
 
-** In state 25, looking ahead at PLUS, shifting is permitted
+** In state 24, looking ahead at PLUS, shifting is permitted
 ** because of the following sub-derivation:
 
 expr EQ expr 
         expr . PLUS expr 
 
-** In state 25, looking ahead at PLUS, reducing production
+** In state 24, looking ahead at PLUS, reducing production
 ** expr -> expr EQ expr
 ** is permitted because of the following sub-derivation:
 
 expr PLUS expr // lookahead token appears
 expr EQ expr . 
 
-** Conflict (shift/reduce) in state 23.
+** Conflict (shift/reduce) in state 22.
 ** Tokens involved: PLUS OR NEQ MULT MINUS LT GT EQ ELT EGT DIV AND
 ** The following explanations concentrate on token PLUS.
 ** This state is reached from prog after reading:
@@ -150,24 +202,24 @@ expr GT expr
 ** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
 
 prog 
-block EOF 
-expr 
+stmt EOF 
+expr ENDL 
 (?)
 
-** In state 23, looking ahead at PLUS, shifting is permitted
+** In state 22, looking ahead at PLUS, shifting is permitted
 ** because of the following sub-derivation:
 
 expr GT expr 
         expr . PLUS expr 
 
-** In state 23, looking ahead at PLUS, reducing production
+** In state 22, looking ahead at PLUS, reducing production
 ** expr -> expr GT expr
 ** is permitted because of the following sub-derivation:
 
 expr PLUS expr // lookahead token appears
 expr GT expr . 
 
-** Conflict (shift/reduce) in state 21.
+** Conflict (shift/reduce) in state 20.
 ** Tokens involved: OR NEQ LT GT EQ ELT EGT AND
 ** The following explanations concentrate on token OR.
 ** This state is reached from prog after reading:
@@ -178,24 +230,24 @@ expr MINUS expr
 ** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
 
 prog 
-block EOF 
-expr 
+stmt EOF 
+expr ENDL 
 (?)
 
-** In state 21, looking ahead at OR, reducing production
+** In state 20, looking ahead at OR, reducing production
 ** expr -> expr MINUS expr
 ** is permitted because of the following sub-derivation:
 
 expr OR expr // lookahead token appears
 expr MINUS expr . 
 
-** In state 21, looking ahead at OR, shifting is permitted
+** In state 20, looking ahead at OR, shifting is permitted
 ** because of the following sub-derivation:
 
 expr MINUS expr 
            expr . OR expr 
 
-** Conflict (shift/reduce) in state 19.
+** Conflict (shift/reduce) in state 18.
 ** Tokens involved: PLUS OR NEQ MULT MINUS LT GT EQ ELT EGT DIV AND
 ** The following explanations concentrate on token PLUS.
 ** This state is reached from prog after reading:
@@ -206,24 +258,24 @@ expr LT expr
 ** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
 
 prog 
-block EOF 
-expr 
+stmt EOF 
+expr ENDL 
 (?)
 
-** In state 19, looking ahead at PLUS, shifting is permitted
+** In state 18, looking ahead at PLUS, shifting is permitted
 ** because of the following sub-derivation:
 
 expr LT expr 
         expr . PLUS expr 
 
-** In state 19, looking ahead at PLUS, reducing production
+** In state 18, looking ahead at PLUS, reducing production
 ** expr -> expr LT expr
 ** is permitted because of the following sub-derivation:
 
 expr PLUS expr // lookahead token appears
 expr LT expr . 
 
-** Conflict (shift/reduce) in state 17.
+** Conflict (shift/reduce) in state 16.
 ** Tokens involved: OR NEQ LT GT EQ ELT EGT AND
 ** The following explanations concentrate on token OR.
 ** This state is reached from prog after reading:
@@ -234,24 +286,24 @@ expr MULT expr
 ** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
 
 prog 
-block EOF 
-expr 
+stmt EOF 
+expr ENDL 
 (?)
 
-** In state 17, looking ahead at OR, reducing production
+** In state 16, looking ahead at OR, reducing production
 ** expr -> expr MULT expr
 ** is permitted because of the following sub-derivation:
 
 expr OR expr // lookahead token appears
 expr MULT expr . 
 
-** In state 17, looking ahead at OR, shifting is permitted
+** In state 16, looking ahead at OR, shifting is permitted
 ** because of the following sub-derivation:
 
 expr MULT expr 
           expr . OR expr 
 
-** Conflict (shift/reduce) in state 15.
+** Conflict (shift/reduce) in state 14.
 ** Tokens involved: PLUS OR NEQ MULT MINUS LT GT EQ ELT EGT DIV AND
 ** The following explanations concentrate on token PLUS.
 ** This state is reached from prog after reading:
@@ -262,24 +314,24 @@ expr NEQ expr
 ** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
 
 prog 
-block EOF 
-expr 
+stmt EOF 
+expr ENDL 
 (?)
 
-** In state 15, looking ahead at PLUS, shifting is permitted
+** In state 14, looking ahead at PLUS, shifting is permitted
 ** because of the following sub-derivation:
 
 expr NEQ expr 
          expr . PLUS expr 
 
-** In state 15, looking ahead at PLUS, reducing production
+** In state 14, looking ahead at PLUS, reducing production
 ** expr -> expr NEQ expr
 ** is permitted because of the following sub-derivation:
 
 expr PLUS expr // lookahead token appears
 expr NEQ expr . 
 
-** Conflict (shift/reduce) in state 13.
+** Conflict (shift/reduce) in state 12.
 ** Tokens involved: PLUS OR NEQ MULT MINUS LT GT EQ ELT EGT DIV AND
 ** The following explanations concentrate on token PLUS.
 ** This state is reached from prog after reading:
@@ -290,24 +342,24 @@ expr OR expr
 ** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
 
 prog 
-block EOF 
-expr 
+stmt EOF 
+expr ENDL 
 (?)
 
-** In state 13, looking ahead at PLUS, shifting is permitted
+** In state 12, looking ahead at PLUS, shifting is permitted
 ** because of the following sub-derivation:
 
 expr OR expr 
         expr . PLUS expr 
 
-** In state 13, looking ahead at PLUS, reducing production
+** In state 12, looking ahead at PLUS, reducing production
 ** expr -> expr OR expr
 ** is permitted because of the following sub-derivation:
 
 expr PLUS expr // lookahead token appears
 expr OR expr . 
 
-** Conflict (shift/reduce) in state 11.
+** Conflict (shift/reduce) in state 10.
 ** Tokens involved: OR NEQ LT GT EQ ELT EGT AND
 ** The following explanations concentrate on token OR.
 ** This state is reached from prog after reading:
@@ -318,18 +370,18 @@ expr PLUS expr
 ** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
 
 prog 
-block EOF 
-expr 
+stmt EOF 
+expr ENDL 
 (?)
 
-** In state 11, looking ahead at OR, reducing production
+** In state 10, looking ahead at OR, reducing production
 ** expr -> expr PLUS expr
 ** is permitted because of the following sub-derivation:
 
 expr OR expr // lookahead token appears
 expr PLUS expr . 
 
-** In state 11, looking ahead at OR, shifting is permitted
+** In state 10, looking ahead at OR, shifting is permitted
 ** because of the following sub-derivation:
 
 expr PLUS expr 

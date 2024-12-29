@@ -4,6 +4,8 @@
 type token = 
   | TRUE
   | THEN
+  | SRPAREN
+  | SLPAREN
   | RPAREN
   | PLUS
   | OR
@@ -16,9 +18,11 @@ type token =
   | INT of (int)
   | IF
   | GT
+  | FLOAT of (float)
   | FALSE
   | EQ
   | EOF
+  | ENDL
   | ELT
   | ELSE
   | EGT
@@ -31,4 +35,4 @@ exception Error
 
 (* The monolithic API. *)
 
-val prog: (Lexing.lexbuf -> token) -> Lexing.lexbuf -> (Ast.expr)
+val prog: (Lexing.lexbuf -> token) -> Lexing.lexbuf -> (Ast.stmt)

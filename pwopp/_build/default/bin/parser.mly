@@ -3,6 +3,7 @@ open Ast
 %}
 
 %token <int> INT
+%token <float> FLOAT
 %token TRUE
 %token FALSE
 %token NONE
@@ -24,14 +25,17 @@ open Ast
 
 %token LPAREN
 %token RPAREN
+%token SLPAREN
+%token SRPAREN
 
 %token IF
 %token THEN
 %token ELSE
 
+%token ENDL
 %token EOF
 
-%start <Ast.expr> prog
+%start <Ast.stmt> prog
 
 
 %left PLUS MINUS
@@ -40,12 +44,17 @@ open Ast
 %%
 
 prog:
-  | e = block; EOF { e }
+  | e = stmt; EOF { e }
   ;
-
 block:
-  | IF; e1 = expr; THEN; e2 = block; ELSE; e3 = block { If(e1, e2, e3) }
-  | e = expr { e }
+  | e = expr {Exp e}
+  | SLPAREN; st = stmt; SRPAREN {st}
+  ;
+stmt:
+  | e = expr; ENDL; {Exp e}
+  | st1 = stmt; ENDL; st2 = stmt {Seq (st1,st2)}
+  | e = expr; ENDL; st2 = stmt {Seq (Exp(e),st2)}
+  | IF; e1 = expr; THEN; e2 = block ; ELSE; e3 = block  { If(e1, e2, e3) }
   ;
 
 expr:
@@ -66,7 +75,8 @@ expr:
   
 base:
   | i = INT { Int i }
-  | LPAREN; e = block; RPAREN { e }
+  | f = FLOAT { Float f}
+  | LPAREN; e = expr; RPAREN { e }
   | TRUE { Bool true }
   | FALSE { Bool false }
   | NONE { None }
