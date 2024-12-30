@@ -43,7 +43,8 @@ let _ =
           |> run_parser fname
           (* |> include_stdlib *)
           |> Eval.eval_prog
-          |> Eval.print_value)
+          |> ignore)
+          (* |> Eval.print_value) *)
   (* with
   | Eval.MyExn ->
     Printf.eprintf "Unhandled exception!\n";

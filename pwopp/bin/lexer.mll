@@ -40,6 +40,7 @@ rule token =
   | "}" { SRPAREN }
   | ";" { ENDL }
   | ":" { COLON }
+  | "print" { PRINT }
   | ":=" { ASSGN }
   | "None" { NONE }
   | float { FLOAT (float_of_string (Lexing.lexeme lexbuf))}

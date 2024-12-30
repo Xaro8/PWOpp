@@ -39,6 +39,8 @@ open Ast
 %token FOR
 %token TO
 %token COLON
+%token PRINT
+
 
 %token ENDL
 %token EOF
@@ -67,6 +69,7 @@ stmt:
   | IF; e1 = expr; THEN; b1 = block ; ELSE; b2 = block  { If(e1, b1, b2) }
   | i = IDENT ; ASSGN ; e = expr { Assgn(i,e) }
   | FOR; i = IDENT; ASSGN; e1 = expr; TO; e2 = expr ; COLON ; b = block{ For(i, e1, e2, b) } 
+  | PRINT; e =expr ; {Print e}
   ;
 
 expr:

@@ -1,4 +1,5 @@
 ret := 0;
 for x:=0 to 5:{
     ret:=ret + x;
-};x;
+};
+print 2 + 5;
