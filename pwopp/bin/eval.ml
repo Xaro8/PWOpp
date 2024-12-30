@@ -1,5 +1,6 @@
 open Ast
 exception Type_error
+exception Not_iterable
 exception Unbound_var of string
 module M = Map.Make(String)
 
@@ -49,14 +50,30 @@ let rec eval_exp e env =
   | Var x -> match M.find_opt x env with
     | Some v -> v
     | None -> raise (Unbound_var x)
-  let rec eval_stmt st env cont= 
+
+let rec eval_stmt st env cont= 
   match st with
   | Exp e -> cont (eval_exp e env) env
   | Seq(st1,st2) -> eval_stmt st1 env (fun _ env -> eval_stmt st2 env cont) 
   | If(e,st1,st2) -> eval_stmt (Exp e) env (fun v _ -> if (to_float v) <> 0.0 then eval_stmt st1 env cont else eval_stmt st2 env cont)
   | Assgn (var,e) -> let x = eval_exp e env in 
     cont x (M.add var x env)  
-
+  | For(var,starts,ends,st) -> 
+    let stv  = eval_exp starts env in 
+    let endv = eval_exp ends env in 
+    match stv,endv with 
+    | VInt i,VInt n -> eval_for var i n st env cont
+    | _ -> raise Not_iterable
+and eval_for var i n st (env : value M.t) (cont  : value -> value M.t -> value) : value = 
+  if i < n - 1  then 
+    let cont = fun _ env -> eval_stmt (For(var,Int (i+1), Int n, st)) env cont in 
+    let env =  M.add var (VInt i) env
+    in eval_stmt st env cont
+  else if i = (n - 1) then 
+    let env =  M.add var (VInt i) env
+    in eval_stmt st env cont
+  else VNone
+    
 let eval_prog st = eval_stmt st (M.empty) (fun v _ -> v)
 let string_of_value v =
   match v with

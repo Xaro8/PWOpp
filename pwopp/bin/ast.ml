@@ -11,6 +11,7 @@ type expr =
   | None 
 and stmt = 
   | Exp of expr
+  | For of string * expr * expr * stmt
   | Assgn of string * expr
   | If of expr * stmt * stmt
   | Seq of stmt * stmt

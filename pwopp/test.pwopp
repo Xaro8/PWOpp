@@ -1,7 +1,4 @@
-x := 2.13 + 5;
-if x > 3 then {
-    x := x - 2;
-} 
-else {
-    x := x + 3;
-}
+ret := 0;
+for x:=0 to 5:{
+    ret:=ret + x;
+};x;

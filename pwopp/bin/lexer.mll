@@ -23,6 +23,8 @@ rule token =
   | "=" { EQ }
   | "&&" {AND}
   | "||" {OR}
+  | "for" {FOR}
+  | "to" {TO}
   | "true" { TRUE }
   | "false" { FALSE }
   | "if" { IF }
@@ -37,6 +39,7 @@ rule token =
   | "{" { SLPAREN }
   | "}" { SRPAREN }
   | ";" { ENDL }
+  | ":" { COLON }
   | ":=" { ASSGN }
   | "None" { NONE }
   | float { FLOAT (float_of_string (Lexing.lexeme lexbuf))}

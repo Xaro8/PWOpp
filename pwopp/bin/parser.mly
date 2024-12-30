@@ -36,6 +36,10 @@ open Ast
 %token THEN
 %token ELSE
 
+%token FOR
+%token TO
+%token COLON
+
 %token ENDL
 %token EOF
 
@@ -55,12 +59,14 @@ block:
   | SLPAREN; st = stmts; SRPAREN {st}
   ;
 stmts:
+  | st = stmt ; {st}
   | st = stmt ; ENDL; {st}
   | st1 = stmt; ENDL; st2 = stmts {Seq (st1,st2)}
 stmt:
   | e = expr {Exp e}
-  | IF; e1 = expr; THEN; e2 = block ; ELSE; e3 = block  { If(e1, e2, e3) }
+  | IF; e1 = expr; THEN; b1 = block ; ELSE; b2 = block  { If(e1, b1, b2) }
   | i = IDENT ; ASSGN ; e = expr { Assgn(i,e) }
+  | FOR; i = IDENT; ASSGN; e1 = expr; TO; e2 = expr ; COLON ; b = block{ For(i, e1, e2, b) } 
   ;
 
 expr:
