@@ -9,7 +9,10 @@ type value =
   | VInt of int
   | VBool of bool
   | VFloat of float
-  | VFun of string * string list
+  | VFun of string list * Ast.stmt
+
+exception Return_ex of value * value M.t
+
 let float_of_bool b = if b then 1.0 else 0.0 
 let to_float = function 
   | VNone -> failwith "operation with None value"
@@ -59,15 +62,18 @@ let rec eval_exp e env =
   | Bool b -> VBool b, env 
   | Float f -> VFloat f, env
   | None -> VNone, env
-  | Binop(e1,op,e2) -> 
+  | Binop (e1, op, e2) -> 
     let v1, env = eval_exp e1 env in 
     let v2, env = eval_exp e2 env in
     eval_op op v1 v2, env
+  | Call(name,args) -> 
+    let v,_ = eval_fun name args env in 
+     v, env
   | Var x -> match M.find_opt x env with
     | Some v -> v, env
     | None -> raise (Unbound_var x)
 
-let rec eval_stmt st env= 
+and eval_stmt st env= 
   match st with
   | Exp e -> snd (eval_exp e env)
   | Seq(st1,st2) -> eval_stmt st2 (eval_stmt st1 env) 
@@ -77,10 +83,13 @@ let rec eval_stmt st env=
   | Assgn (var,e) -> 
     let v, env = eval_exp e env in 
     (M.add var v env)  
+  | Function (name,args,body) -> M.add name (VFun(args,body)) env  
   | Print e -> 
     let v, env = eval_exp e env in 
     print_value v; env
-  (* | Function (name,args,body) -> cont  *)
+  | Return exp -> 
+      let v, env  = eval_exp exp env in 
+      raise (Return_ex (v,env))
   | For (var,starts,ends,st) -> 
     let stv, env = eval_exp starts env in 
     let endv, env = eval_exp ends env in 
@@ -92,5 +101,21 @@ and eval_for var i n st (env : value M.t) =
     let env = M.add var (VInt i) env in
     eval_for var (i+1) n st (eval_stmt st env)
   else env
-    
+and eval_fun name args env = 
+  match M.find_opt name env with 
+  | Some (VFun(args_n,body) as f_o) -> 
+    let env' =  declare_env args_n args env M.empty in 
+    let env' =  M.add name f_o env' in
+    begin try VNone, eval_stmt body env' with Return_ex (v,env) -> v,env end 
+  | Some _ -> raise Type_error
+  | None -> raise (Unbound_var name)
+and declare_env args_n args env ret = 
+  match args_n,args with
+  | n :: args_n, v :: args -> 
+    let v,env =  eval_exp v env in 
+    let ret = M.add n v ret in 
+    declare_env args_n args env ret 
+  | [], [] -> ret
+  | _ , [] -> failwith "insufficient number of arguments given"
+  | [], _ -> failwith "too much argyments given"
 let eval_prog st = eval_stmt st (M.empty)

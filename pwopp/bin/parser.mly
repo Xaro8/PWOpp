@@ -41,6 +41,8 @@ open Ast
 %token COLON
 %token PRINT
 
+%token DEF
+%token RETURN
 
 %token ENDL
 %token EOF
@@ -58,8 +60,15 @@ prog:
   ;
 block:
   | e = expr {Exp e}
+  | s = stmt {s} 
   | SLPAREN; st = stmts; SRPAREN {st}
   ;
+  
+idents:
+  | x = IDENT; ENDL ; xs = idents { x :: xs }
+  | x = IDENT { [x] }
+  ;
+
 stmts:
   | st = stmt ; {st}
   | st = stmt ; ENDL; {st}
@@ -69,7 +78,14 @@ stmt:
   | IF; e1 = expr; THEN; b1 = block ; ELSE; b2 = block  { If(e1, b1, b2) }
   | i = IDENT ; ASSGN ; e = expr { Assgn(i,e) }
   | FOR; i = IDENT; ASSGN; e1 = expr; TO; e2 = expr ; COLON ; b = block{ For(i, e1, e2, b) } 
-  | PRINT; e =expr ; {Print e}
+  | PRINT; e = expr ; {Print e}
+  | DEF; i = IDENT; LPAREN ; args = idents ; RPAREN ; COLON ; b = block { Function(i, args, b)}
+  | RETURN; e = expr ; {Return e}
+  ;
+
+exprs: 
+  | e = expr; ENDL; xs = exprs { e :: xs }
+  | e = expr { [e] }
   ;
 
 expr:
@@ -92,6 +108,7 @@ base:
   | i = INT { Int i }
   | f = FLOAT { Float f}
   | i = IDENT { Var i }
+  | i = IDENT; LPAREN ; arg = exprs ; RPAREN {Call(i,arg)}
   | LPAREN; e = expr; RPAREN { e }
   | TRUE { Bool true }
   | FALSE { Bool false }

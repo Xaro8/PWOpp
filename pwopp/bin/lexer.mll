@@ -40,6 +40,8 @@ rule token =
   | "}" { SRPAREN }
   | ";" { ENDL }
   | ":" { COLON }
+  | "return" {RETURN}
+  | "def" {DEF}
   | "print" { PRINT }
   | ":=" { ASSGN }
   | "None" { NONE }

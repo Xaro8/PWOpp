@@ -9,14 +9,15 @@ type expr =
   | Bool of bool
   | Float of float
   | Binop of expr * op * expr
-  (* | Call of string * expr list *)
+  | Call of string * expr list
   | None 
 and stmt = 
   | Exp of expr
   | For of string * expr * expr * stmt
   | Assgn of string * expr
-  (* | Function of string * string list * stmt *)
+  | Function of string * string list * stmt
   | Print of expr
+  | Return of expr
   | If of expr * stmt * stmt
   | Seq of stmt * stmt
                                
