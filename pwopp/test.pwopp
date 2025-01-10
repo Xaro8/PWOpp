@@ -1,4 +1,4 @@
-def add(x): {
+def add(x):{
     if (x > 0) then 
         return x + add( x - 1)
     else 
@@ -9,3 +9,11 @@ def fib(n):{
     else if n = 0  then return 0
     else return fib(n - 1) + fib(n - 2)
 };
+
+def ok():{
+    return 2 + 1;
+};
+def hmm(f1):{
+    return f1();
+};
+print hmm(ok);

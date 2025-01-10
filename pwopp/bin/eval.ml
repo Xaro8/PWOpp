@@ -11,7 +11,7 @@ type value =
   | VFloat of float
   | VFun of string list * Ast.stmt
 
-exception Return_ex of value * value M.t
+exception Return_ex of value * value M.t (*mozna zmienic*)
 
 let float_of_bool b = if b then 1.0 else 0.0 
 let to_float = function 
@@ -73,7 +73,7 @@ let rec eval_exp e env =
     | Some v -> v, env
     | None -> raise (Unbound_var x)
 
-and eval_stmt st env= 
+and eval_stmt st env = 
   match st with
   | Exp e -> snd (eval_exp e env)
   | Seq(st1,st2) -> eval_stmt st2 (eval_stmt st1 env) 
@@ -117,5 +117,5 @@ and declare_env args_n args env ret =
     declare_env args_n args env ret 
   | [], [] -> ret
   | _ , [] -> failwith "insufficient number of arguments given"
-  | [], _ -> failwith "too much argyments given"
+  | [], _ -> failwith "too much arguments given"
 let eval_prog st = eval_stmt st (M.empty)

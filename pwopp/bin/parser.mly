@@ -52,14 +52,13 @@ open Ast
 
 %left PLUS MINUS
 %left MULT DIV
-
+%left OR NEQ LT GT EQ ELT EGT AND
 %%
 
 prog:
   | e = stmts; EOF { e }
   ;
 block:
-  | e = expr {Exp e}
   | s = stmt {s} 
   | SLPAREN; st = stmts; SRPAREN {st}
   ;
@@ -79,7 +78,8 @@ stmt:
   | i = IDENT ; ASSGN ; e = expr { Assgn(i,e) }
   | FOR; i = IDENT; ASSGN; e1 = expr; TO; e2 = expr ; COLON ; b = block{ For(i, e1, e2, b) } 
   | PRINT; e = expr ; {Print e}
-  | DEF; i = IDENT; LPAREN ; args = idents ; RPAREN ; COLON ; b = block { Function(i, args, b)}
+  | DEF; i = IDENT; LPAREN ; args = idents ; RPAREN ; COLON  ; b = block { Function(i, args, b)}
+  | DEF; i = IDENT; LPAREN ; RPAREN ; COLON ; b = block { Function(i, [], b)}
   | RETURN; e = expr ; {Return e}
   ;
 
@@ -109,6 +109,7 @@ base:
   | f = FLOAT { Float f}
   | i = IDENT { Var i }
   | i = IDENT; LPAREN ; arg = exprs ; RPAREN {Call(i,arg)}
+  | i = IDENT; LPAREN ; RPAREN {Call(i,[])}
   | LPAREN; e = expr; RPAREN { e }
   | TRUE { Bool true }
   | FALSE { Bool false }
