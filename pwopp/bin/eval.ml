@@ -10,6 +10,7 @@ type value =
   | VBool of bool
   | VFloat of float
   | VFun of string list * Ast.stmt
+  | Varr of value array
 
 exception Return_ex of value * value M.t (*mozna zmienic*)
 
@@ -20,7 +21,6 @@ let to_float = function
   | VBool b -> float_of_bool b
   | VFloat f -> f 
   | _ -> raise Type_error
-
 let op_arith f_int f_float v1 v2 =
   match v1, v2 with
   | VInt x, VInt y -> VInt (f_int x y)
@@ -28,9 +28,7 @@ let op_arith f_int f_float v1 v2 =
   | VInt x, VFloat y -> VFloat (f_float (float_of_int x) y)
   | VFloat x, VInt y -> VFloat (f_float x (float_of_int y))
   | _ -> raise Type_error
-
-let op_eq f v1 v2 = VBool (f ( to_float v1) (to_float v2)) 
- 
+let op_eq f v1 v2 = VBool (f ( to_float v1) (to_float v2))  
 let eval_op op v1 v2 = match op with 
  | Add -> op_arith (+) (+.) v1 v2
  | Sub -> op_arith (-) (-.) v1 v2
@@ -43,16 +41,16 @@ let eval_op op v1 v2 = match op with
  | Egt -> op_eq (>=) v1 v2
  | Neq -> op_eq (<>) v1 v2
  | _ -> raise Type_error
-let string_of_value v =
+
+ let rec string_of_value v =
   match v with
   | VNone      -> "None"
   | VInt n      -> string_of_int n
   | VBool true  -> "true"
   | VBool false -> "false"
   | VFloat f -> string_of_float f
+  | Varr a -> "[" ^ (Array.to_list a |> List.map string_of_value |> String.concat " , ") ^ "]"
   | _ -> raise Type_error
-
-
 let print_value v =
   print_endline (string_of_value v)
 
@@ -69,6 +67,21 @@ let rec eval_exp e env =
   | Call(name,args) -> 
     let v,_ = eval_fun name args env in 
      v, env
+  | ArrayGet(name,idx) ->
+    begin match M.find_opt name env with
+    | Some (Varr a) ->
+        begin match eval_exp idx env  with 
+        | VInt i, env  -> a.(i) , env
+        | _ -> raise Type_error
+        end
+    | Some _ -> raise Type_error
+    | None -> failwith ("Undefined array: " ^ name)
+    end 
+  | Array_in len -> 
+      begin match eval_exp len env with
+      | VInt l,env -> Varr (Array.init l (fun _ -> VInt 0)), env
+      | _ -> raise Type_error
+      end 
   | Var x -> match M.find_opt x env with
     | Some v -> v, env
     | None -> raise (Unbound_var x)
@@ -83,6 +96,7 @@ and eval_stmt st env =
   | Assgn (var,e) -> 
     let v, env = eval_exp e env in 
     (M.add var v env)  
+  | Assgn_arr(name,idx,e) ->  assgn_arr name idx e env
   | Function (name,args,body) -> M.add name (VFun(args,body)) env  
   | Print e -> 
     let v, env = eval_exp e env in 
@@ -109,10 +123,21 @@ and eval_fun name args env =
     begin try VNone, eval_stmt body env' with Return_ex (v,env) -> v,env end 
   | Some _ -> raise Type_error
   | None -> raise (Unbound_var name)
+and assgn_arr name idx e env = 
+  match M.find_opt name env with
+  | Some (Varr a) ->
+    begin match eval_exp idx env with 
+      | VInt i, env->
+        let v,env = eval_exp e env in   
+        a.(i) <- v; env
+      | _ -> raise Type_error
+    end
+  | Some _ -> raise Type_error
+  | None -> failwith ("Undefined array: " ^ name)
 and declare_env args_n args env ret = 
-  match args_n,args with
+  match args_n, args with
   | n :: args_n, v :: args -> 
-    let v,env =  eval_exp v env in 
+    let v, env =  eval_exp v env in 
     let ret = M.add n v ret in 
     declare_env args_n args env ret 
   | [], [] -> ret

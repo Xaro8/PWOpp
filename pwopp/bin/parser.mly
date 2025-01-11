@@ -40,6 +40,7 @@ open Ast
 %token TO
 %token COLON
 %token PRINT
+%token COMMA
 
 %token DEF
 %token RETURN
@@ -64,7 +65,7 @@ block:
   ;
   
 idents:
-  | x = IDENT; ENDL ; xs = idents { x :: xs }
+  | x = IDENT; COMMA ; xs = idents { x :: xs }
   | x = IDENT { [x] }
   ;
 
@@ -84,7 +85,7 @@ stmt:
   ;
 
 exprs: 
-  | e = expr; ENDL; xs = exprs { e :: xs }
+  | e = expr; COMMA ; xs = exprs { e :: xs }
   | e = expr { [e] }
   ;
 
