@@ -77,11 +77,12 @@ let rec eval_exp e env =
     | Some _ -> raise Type_error
     | None -> failwith ("Undefined array: " ^ name)
     end 
-  | Array_in len -> 
-      begin match eval_exp len env with
-      | VInt l,env -> Varr (Array.init l (fun _ -> VInt 0)), env
-      | _ -> raise Type_error
-      end 
+  | Array_in(v,len) -> 
+    let v,env = eval_exp v env in  
+    begin match eval_exp len env with
+    | VInt l,env -> Varr (Array.init l (fun _ -> v)), env
+    | _ -> raise Type_error
+    end 
   | Var x -> match M.find_opt x env with
     | Some v -> v, env
     | None -> raise (Unbound_var x)

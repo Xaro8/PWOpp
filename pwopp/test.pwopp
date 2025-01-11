@@ -13,7 +13,9 @@ def fib(n):{
 def ok():{
     return 2 + 1;
 };
-def hmm(f1):{
-    return f1();
+def hmm(f1,f2):{
+    return f1() + f2();
 };
-print hmm(ok);
+x:= [5] * 5;
+x[2]:= 2;
+print x[2];

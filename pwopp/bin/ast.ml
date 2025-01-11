@@ -11,7 +11,7 @@ type expr =
   | Binop of expr * op * expr
   | Call of string * expr list
   | ArrayGet of string * expr
-  | Array_in of expr
+  | Array_in of expr * expr
   | None 
 and stmt = 
   | Exp of expr

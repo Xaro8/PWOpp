@@ -38,6 +38,8 @@ rule token =
   | ")" { RPAREN }
   | "{" { SLPAREN }
   | "}" { SRPAREN }
+  | "[" { SQLPAREN }
+  | "]" { SQRPAREN }
   | ";" { ENDL }
   | ":" { COLON }
   | "," { COMMA }
