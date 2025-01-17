@@ -41,8 +41,7 @@ let eval_op op v1 v2 = match op with
  | Egt -> op_eq (>=) v1 v2
  | Neq -> op_eq (<>) v1 v2
  | _ -> raise Type_error
-
- let rec string_of_value v =
+let rec string_of_value v =
   match v with
   | VNone      -> "None"
   | VInt n      -> string_of_int n
@@ -51,9 +50,8 @@ let eval_op op v1 v2 = match op with
   | VFloat f -> string_of_float f
   | Varr a -> "[" ^ (Array.to_list a |> List.map string_of_value |> String.concat " , ") ^ "]"
   | _ -> raise Type_error
-let print_value v =
+let print_value v = 
   print_endline (string_of_value v)
-
 let rec eval_exp e env =
   match e with  
   | Int a -> VInt a, env
@@ -77,16 +75,10 @@ let rec eval_exp e env =
     | Some _ -> raise Type_error
     | None -> failwith ("Undefined array: " ^ name)
     end 
-  | Array_in(v,len) -> 
-    let v,env = eval_exp v env in  
-    begin match eval_exp len env with
-    | VInt l,env -> Varr (Array.init l (fun _ -> v)), env
-    | _ -> raise Type_error
-    end 
+  | Array_in(vs,len) -> array_init vs len env
   | Var x -> match M.find_opt x env with
     | Some v -> v, env
-    | None -> raise (Unbound_var x)
-
+    | None -> raise (Unbound_var x) 
 and eval_stmt st env = 
   match st with
   | Exp e -> snd (eval_exp e env)
@@ -96,7 +88,10 @@ and eval_stmt st env =
     if (to_float v) <> 0.0 then eval_stmt st1 env else eval_stmt st2 env 
   | Assgn (var,e) -> 
     let v, env = eval_exp e env in 
-    (M.add var v env)  
+    begin match v with
+      | Varr arr -> M.add var (Varr (Array.copy arr)) env
+      | _ -> M.add var v env  
+    end 
   | Assgn_arr(name,idx,e) ->  assgn_arr name idx e env
   | Function (name,args,body) -> M.add name (VFun(args,body)) env  
   | Print e -> 
@@ -109,9 +104,9 @@ and eval_stmt st env =
     let stv, env = eval_exp starts env in 
     let endv, env = eval_exp ends env in 
     match stv,endv with 
-    | VInt i, VInt n -> eval_for var i n st env
+    | VInt i, VInt n -> eval_for var i n st env 
     | _ -> raise Not_iterable
-and eval_for var i n st (env : value M.t) =   
+and eval_for var i n st env =   
   if i < n then 
     let env = M.add var (VInt i) env in
     eval_for var (i+1) n st (eval_stmt st env)
@@ -128,9 +123,12 @@ and assgn_arr name idx e env =
   match M.find_opt name env with
   | Some (Varr a) ->
     begin match eval_exp idx env with 
-      | VInt i, env->
+      | VInt i, env ->
         let v,env = eval_exp e env in   
-        a.(i) <- v; env
+        begin match v with
+          | Varr arr -> a.(i) <- Varr (Array.copy arr); env
+          | _ -> a.(i) <- v; env
+        end
       | _ -> raise Type_error
     end
   | Some _ -> raise Type_error
@@ -144,4 +142,15 @@ and declare_env args_n args env ret =
   | [], [] -> ret
   | _ , [] -> failwith "insufficient number of arguments given"
   | [], _ -> failwith "too much arguments given"
-let eval_prog st = eval_stmt st (M.empty)
+and array_init vs len env = 
+  let help v (ret,env) = 
+    let v,env =  eval_exp v env in 
+    (v::ret,env)
+  in let ret,env = List.fold_right help vs ([],env) 
+  in let retlen = List.length ret 
+  in begin match eval_exp len env with
+  | VInt l,env -> Varr (Array.init (l*retlen) (fun idx -> List.nth ret (idx mod retlen))), env
+  | _ -> raise Type_error
+  end 
+
+let eval_prog st = eval_stmt st (M.empty) 

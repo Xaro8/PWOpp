@@ -80,11 +80,10 @@ stmt:
   | e = expr {Exp e}
   | IF; e1 = expr; THEN; b1 = block ; ELSE; b2 = block  { If(e1, b1, b2) }
   | i = IDENT ; ASSGN ; e = expr { Assgn(i,e) }
-  | i = IDENT ; ASSGN ; SQLPAREN ; e = expr ; SQRPAREN; MULT; len  = expr  { Assgn(i,Array_in(e,len)) }
   | name = IDENT ; SQLPAREN ; i = expr ; SQRPAREN; ASSGN ; e = expr { Assgn_arr(name,i,e) }
   | FOR; i = IDENT; ASSGN; e1 = expr; TO; e2 = expr ; COLON ; b = block{ For(i, e1, e2, b) } 
   | PRINT; e = expr ; {Print e}
-  | DEF; i = IDENT; LPAREN ; args = idents ; RPAREN ; COLON  ; b = block { Function(i, args, b)}
+  | DEF; i = IDENT; LPAREN ; args = idents ; RPAREN ; COLON ; b = block { Function(i, args, b)}
   | RETURN; e = expr ; {Return e}
   ;
 
@@ -115,6 +114,7 @@ base:
   | f = FLOAT { Float f}
   | i = IDENT { Var i }
   | i = IDENT; LPAREN ; arg = exprs ; RPAREN {Call(i,arg)}
+  | SQLPAREN ; e = exprs ; SQRPAREN ; MULT ; l = expr {Array_in(e,l)}
   | i = IDENT; SQLPAREN ; arg = expr ; SQRPAREN {ArrayGet(i,arg)}
   | LPAREN; e = expr; RPAREN { e }
   | TRUE { Bool true }
