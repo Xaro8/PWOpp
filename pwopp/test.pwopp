@@ -26,9 +26,8 @@ def plus(x):{
 };
 
 x:=[[0]*5] * 5;
-y:=[2]*3;
-y[0]:= x[2];
-print y;
+x[2][2]:=2;
+print x[2][2];
 def map(arr,len,f,plus):{
     plus(len);
     for i:=0 to len : arr[i]:=f(arr[i]);

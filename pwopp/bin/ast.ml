@@ -10,14 +10,14 @@ type expr =
   | Float of float
   | Binop of expr * op * expr
   | Call of string * expr list
-  | ArrayGet of string * expr
+  | ArrayGet of string * expr list
   | Array_in of expr list * expr
   | None 
 and stmt = 
   | Exp of expr
   | For of string * expr * expr * stmt
   | Assgn of string * expr
-  | Assgn_arr of string * expr * expr
+  | Assgn_arr of string * expr list * expr
   | Function of string * string list * stmt
   | Print of expr
   | Return of expr
