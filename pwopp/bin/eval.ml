@@ -1,48 +1,40 @@
 open Ast
+open Monad.EvalMonad
 
 exception Type_error
 exception Not_iterable
 exception Unbound_var of string
 
 module M = Map.Make(String)
-module E = Either 
-
-type value =
-  | VNone
-  | VInt of int
-  | VBool of bool
-  | VFloat of float
-  | VFun of string list * Ast.stmt
-  | Varr of value array
 
 exception Return_ex of value * value M.t (*mozna zmienic*)
 
 let float_of_bool b = if b then 1.0 else 0.0 
 let to_float = function 
   | VNone -> failwith "operation with None value"
-  | VInt x -> float_of_int x
+  | VInt x -> float_of_int x 
   | VBool b -> float_of_bool b
   | VFloat f -> f 
   | _ -> raise Type_error
 let op_arith f_int f_float v1 v2 =
   match v1, v2 with
-  | VInt x, VInt y -> VInt (f_int x y)
-  | VFloat x, VFloat y -> VFloat (f_float x y)
-  | VInt x, VFloat y -> VFloat (f_float (float_of_int x) y)
-  | VFloat x, VInt y -> VFloat (f_float x (float_of_int y))
+  | VInt x, VInt y -> VInt (f_int x y) |> return
+  | VFloat x, VFloat y -> VFloat (f_float x y) |> return
+  | VInt x, VFloat y -> VFloat (f_float (float_of_int x) y) |> return
+  | VFloat x, VInt y -> VFloat (f_float x (float_of_int y)) |> return
   | _ -> raise Type_error
-let op_eq f v1 v2 = VBool (f ( to_float v1) (to_float v2))  
+let op_eq f v1 v2 = VBool (f ( to_float v1) (to_float v2))  |> return
 let eval_op op v1 v2 = match op with 
- | Add -> op_arith (+) (+.) v1 v2
- | Sub -> op_arith (-) (-.) v1 v2
- | Mult -> op_arith ( * ) ( *. ) v1 v2
- | Div -> op_arith (/) (/.) v1 v2
- | Eq -> op_eq (=) v1 v2
- | Lt -> op_eq (<) v1 v2
- | Gt -> op_eq (>) v1 v2
- | Elt -> op_eq (<=) v1 v2
- | Egt -> op_eq (>=) v1 v2
- | Neq -> op_eq (<>) v1 v2
+ | Add -> op_arith (+) (+.) v1 v2 |> return
+ | Sub -> op_arith (-) (-.) v1 v2 |> return
+ | Mult -> op_arith ( * ) ( *. ) v1 v2 |> return
+ | Div -> op_arith (/) (/.) v1 v2 |> return
+ | Eq -> op_eq (=) v1 v2 |> return
+ | Lt -> op_eq (<) v1 v2 |> return
+ | Gt -> op_eq (>) v1 v2 |> return
+ | Elt -> op_eq (<=) v1 v2 |> return
+ | Egt -> op_eq (>=) v1 v2 |> return
+ | Neq -> op_eq (<>) v1 v2 |> return
  | _ -> raise Type_error
 let rec string_of_value v = match v with
   | VNone       -> "None"
@@ -53,15 +45,15 @@ let rec string_of_value v = match v with
   | Varr a      -> "[" ^ (Array.to_list a |> List.map string_of_value |> String.concat ", ") ^ "]"
   | _           -> raise Type_error
 let print_value v = v |> string_of_value |> print_endline
-let rec eval_exp e env = match e with  
-  | Int a -> VInt a, env
-  | Bool b -> VBool b, env 
-  | Float f -> VFloat f, env
-  | None -> VNone, env
+let rec eval_exp = function  
+  | Int a -> return (VInt a)
+  | Bool b -> return (VBool b)
+  | Float f -> return (VFloat f)
+  | None -> return (VNone)
   | Binop (e1, op, e2) -> 
-    let v1, env = eval_exp e1 env in 
-    let v2, env = eval_exp e2 env in
-    eval_op op v1 v2, env
+    eval_exp e1 >>= fun v1 ->
+    eval_exp e2 >>= fun v2 ->
+    eval_op op v1 v2
   | Call(name,args) -> 
     let v, _ = eval_fun name args env in 
     v, env

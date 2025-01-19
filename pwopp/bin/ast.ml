@@ -24,3 +24,10 @@ and stmt =
   | If of expr * stmt * stmt
   | Seq of stmt * stmt
                                
+  type value =
+  | VNone
+  | VInt of int
+  | VBool of bool
+  | VFloat of float
+  | VFun of string list * stmt
+  | Varr of value array
