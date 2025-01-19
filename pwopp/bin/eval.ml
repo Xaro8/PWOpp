@@ -18,12 +18,12 @@ let to_float = function
   | _ -> raise Type_error
 let op_arith f_int f_float v1 v2 =
   match v1, v2 with
-  | VInt x, VInt y -> VInt (f_int x y) |> return
-  | VFloat x, VFloat y -> VFloat (f_float x y) |> return
-  | VInt x, VFloat y -> VFloat (f_float (float_of_int x) y) |> return
-  | VFloat x, VInt y -> VFloat (f_float x (float_of_int y)) |> return
+  | VInt x, VInt y -> VInt (f_int x y) 
+  | VFloat x, VFloat y -> VFloat (f_float x y)
+  | VInt x, VFloat y -> VFloat (f_float (float_of_int x) y)
+  | VFloat x, VInt y -> VFloat (f_float x (float_of_int y))
   | _ -> raise Type_error
-let op_eq f v1 v2 = VBool (f ( to_float v1) (to_float v2))  |> return
+let op_eq f v1 v2 = VBool (f ( to_float v1) (to_float v2))  
 let eval_op op v1 v2 = match op with 
  | Add -> op_arith (+) (+.) v1 v2 |> return
  | Sub -> op_arith (-) (-.) v1 v2 |> return
@@ -54,65 +54,75 @@ let rec eval_exp = function
     eval_exp e1 >>= fun v1 ->
     eval_exp e2 >>= fun v2 ->
     eval_op op v1 v2
-  | Call(name,args) -> 
-    let v, _ = eval_fun name args env in 
-    v, env
+  | Call(name,args) -> eval_fun name args 
   | ArrayGet (name, idxs) -> 
-    begin match M.find_opt name env with
-      | Some (Varr a) -> array_op (Varr a) idxs env
-      | Some _ -> raise Type_error
-      | None -> failwith ("Undefined array: " ^ name)
-    end 
-  | Array_in (vs, len) -> array_init vs len env
-  | Var x -> match M.find_opt x env with
-    | Some v -> v, env
+    get_state >>= fun _ env ->
+      begin match M.find_opt name env with
+        | Some (Varr a) -> array_op (Varr a) idxs
+        | Some _ -> raise Type_error
+        | None -> failwith ("Undefined array: " ^ name)
+      end 
+  | Array_in (vs, len) -> array_init vs len
+  | Var x -> 
+    get_state >>= fun _ env -> 
+    match M.find_opt x env with
+    | Some v -> return v env
     | None -> raise (Unbound_var x) 
-and eval_stmt st env = match st with
-  | Exp e -> eval_exp e env |> snd
-  | Seq (st1, st2) -> eval_stmt st1 env |> eval_stmt st2 
+and eval_stmt st = match st with
+  | Exp e -> eval_exp e 
+  | Seq (st1, st2) -> eval_stmt st1 env |> eval_stmt st2  (*TOFFOFOOFOFFOO*)
   | If (e, st1, st2) -> 
-    let v, env = eval_exp e env in
-    if (to_float v) <> 0.0 then eval_stmt st1 env else eval_stmt st2 env 
+    eval_exp e >>= fun v -> 
+    if (to_float v) <> 0.0 then eval_stmt st1 else eval_stmt st2  
   | Assgn (var, e) -> 
-    let v, env = eval_exp e env in 
+    eval_exp e >>= fun v ->
+    get_state >>= fun _ env ->
     begin match v with
-      | Varr arr -> M.add var (Varr (Array.copy arr)) env
-      | _ -> M.add var v env  
+      | Varr arr -> let env = M.add var (Varr (Array.copy arr)) env in set_state env env
+      | _ -> let env = M.add var v env in set_state env env 
     end 
   | Assgn_arr(name, idxs, e) ->   
+    eval_exp e >>= fun v ->
+    get_state >>= fun _ env ->
     begin match M.find_opt name env with
-      | Some (Varr a) -> snd (array_op ?set:(Some e) (Varr a) idxs env)
+      | Some (Varr a) -> array_op ?set:(Some v) (Varr a) idxs
       | Some _ -> raise Type_error
       | None -> failwith ("Undefined array: " ^ name)
     end 
-  | Function (name, args, body) -> M.add name (VFun (args, body)) env  
+  | Function (name, args, body) -> 
+    get_state >>= fun _ env ->
+    let env = M.add name (VFun (args, body)) env in set_state env env
   | Print e -> 
-    let v, env = eval_exp e env in 
-    print_value v; env
+    eval_exp e >>= fun v -> 
+    print_value v; return VNone
   | Return exp -> 
-    let v, env = eval_exp exp env in 
-    raise (Return_ex (v, env))
+    eval_exp exp >>= fun v -> signal_return v  
   | For (var, starts, ends, st) -> 
-    let stv, env  = eval_exp starts env in 
-    let endv, env = eval_exp ends env in 
+    eval_exp starts >>= fun stv ->
+    eval_exp ends >>= fun endv ->
     begin match stv, endv with 
-      | VInt i, VInt n -> eval_for var i n st env 
+      | VInt i, VInt n -> eval_for var i n st
       | _ -> raise Not_iterable
     end
-and eval_for var i n st env =   
+and eval_for var i n st=   
   if i < n then 
+    get_state >>= fun _ env ->
     let env = M.add var (VInt i) env in
-    eval_for var (i + 1) n st (eval_stmt st env)
-  else env
-and eval_fun name args env = 
+    (set_state env >>= fun _ ->
+    eval_stmt st >>= fun _  ->
+    eval_for var (i + 1) n st) env
+  else get_state
+and eval_fun name args = 
+  get_state >>= fun _ env ->
   match M.find_opt name env with 
   | Some (VFun (args_n, body) as f_o) -> 
     let env' =  declare_env args_n args env M.empty in 
     let env' =  M.add name f_o env' in
-    begin try VNone, eval_stmt body env' with Return_ex (v, env) -> v, env end 
+    (set_state env' >>= fun _ ->
+    eval_stmt body ) env'
   | Some _ -> raise Type_error
   | None   -> raise (Unbound_var name)
-and declare_env args_n args env ret = 
+and declare_env args_n args env ret : value M.t = 
   match args_n, args with
   | n :: args_n, v :: args -> 
     let v, env =  eval_exp v env in 
