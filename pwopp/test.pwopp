@@ -49,3 +49,10 @@ def multnzero(arr,len):{
 };
 y:=[0,2]*5;
 print multnzero(y,10);
+n:= 5;
+ret:=0;
+while true :{
+    ret:=ret + n;
+    n:= n - 1;
+};
+print ret;

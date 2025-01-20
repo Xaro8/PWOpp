@@ -23,13 +23,6 @@ rule token =
   | "=" { EQ }
   | "&&" {AND}
   | "||" {OR}
-  | "for" {FOR}
-  | "to" {TO}
-  | "true" { TRUE }
-  | "false" { FALSE }
-  | "if" { IF }
-  | "then" { THEN }
-  | "else" { ELSE }
   | "*" { MULT }
   | "+" { PLUS }
   | "-" { MINUS }
@@ -43,14 +36,22 @@ rule token =
   | ";" { ENDL }
   | ":" { COLON }
   | "," { COMMA }
+  | "for" {FOR}
+  | "while" {WHILE}
+  | "to" {TO}
+  | "true" { TRUE }
+  | "false" { FALSE }
+  | "if" { IF }
+  | "then" { THEN }
+  | "else" { ELSE }
   | "return" {RETURN}
   | "continue" { CONTINUE }
   | "break" { BREAK}
   | "def" {DEF}
   | "print" { PRINT }
   | ":=" { ASSGN }
-  | "None" { NONE }
-  | float { FLOAT (float_of_string (Lexing.lexeme lexbuf))}
+  | "none" { NONE }
   | number { INT (int_of_string (Lexing.lexeme lexbuf)) } 
+  | float { FLOAT (float_of_string (Lexing.lexeme lexbuf))}
   | ident { IDENT (Lexing.lexeme lexbuf) }
   | eof { EOF }

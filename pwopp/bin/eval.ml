@@ -111,6 +111,9 @@ and eval_stmt st env = match st with
       | VInt i, VInt n -> begin try eval_for var i n st env with Break env -> env end 
       | _ -> raise Not_iterable
     end
+  | While (e,st) as loop -> 
+    let v,env = eval_exp e env in 
+    if (to_float v) <> 0.0 then eval_stmt loop (eval_stmt st env) else env
 and eval_for var i n st env =   
   if i < n then 
     let env = M.add var (VInt i) env in
