@@ -38,4 +38,14 @@ def id(x):{
 };
 f:= id(id);
 print f(42);
-z:=[0,1,2,2,3]*500000;
+
+def multnzero(arr,len):{
+    ret := 1;
+    for i:=0 to len :{
+        if arr[i] = 0 then continue 
+        else ret:= ret * arr[i] 
+    };
+    return ret;
+};
+y:=[0,2]*5;
+print multnzero(y,10);

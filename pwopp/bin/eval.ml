@@ -16,6 +16,8 @@ type value =
   | Varr of value array
 
 exception Return_ex of value * value M.t (*mozna zmienic*)
+exception Break of value M.t
+exception Continue of value M.t
 
 let float_of_bool b = if b then 1.0 else 0.0 
 let to_float = function 
@@ -100,17 +102,20 @@ and eval_stmt st env = match st with
   | Return exp -> 
     let v, env = eval_exp exp env in 
     raise (Return_ex (v, env))
+  | Break -> raise (Break env)
+  | Continue -> raise (Continue env)
   | For (var, starts, ends, st) -> 
     let stv, env  = eval_exp starts env in 
     let endv, env = eval_exp ends env in 
     begin match stv, endv with 
-      | VInt i, VInt n -> eval_for var i n st env 
+      | VInt i, VInt n -> begin try eval_for var i n st env with Break env -> env end 
       | _ -> raise Not_iterable
     end
 and eval_for var i n st env =   
   if i < n then 
     let env = M.add var (VInt i) env in
-    eval_for var (i + 1) n st (eval_stmt st env)
+    let env = begin try  eval_stmt st env with Continue env -> env end in
+    eval_for var (i + 1) n st env
   else env
 and eval_fun name args env = 
   match M.find_opt name env with 

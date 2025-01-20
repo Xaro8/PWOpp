@@ -21,6 +21,8 @@ and stmt =
   | Function of string * string list * stmt
   | Print of expr
   | Return of expr
+  | Continue
+  | Break
   | If of expr * stmt * stmt
   | Seq of stmt * stmt
                                

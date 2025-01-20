@@ -46,6 +46,8 @@ open Ast
 
 %token DEF
 %token RETURN
+%token BREAK
+%token CONTINUE
 
 %token ENDL
 %token EOF
@@ -85,6 +87,8 @@ stmt:
   | PRINT; e = expr ; {Print e}
   | DEF; i = IDENT; LPAREN ; args = idents ; RPAREN ; COLON ; b = block { Function(i, args, b)}
   | RETURN; e = expr ; {Return e}
+  | BREAK {Break}
+  | CONTINUE {Continue}
   ;
 
 exprs: 
