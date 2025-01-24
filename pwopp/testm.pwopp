@@ -1,0 +1,21 @@
+x:= 5; 
+x:=[[0]*5]*5;
+x[2]:=3;
+
+ret:=0;
+len:=5;
+for i:=0 to len:{
+    ret:=ret + i;
+};
+
+def foo (x,y):{
+    x:=x+1;
+    print x * y;
+};
+foo(3,2);
+
+def bar(x,y):{
+    print x(y,y);
+};
+bar(foo, 3);
+print ret;

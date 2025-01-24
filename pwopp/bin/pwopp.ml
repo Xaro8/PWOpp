@@ -1,3 +1,4 @@
+open Cf_monad2
 exception Parse_error of Lexing.position * string
 
 let use_stdlib = ref true
@@ -39,10 +40,10 @@ let _ =
     | Some fname ->
       In_channel.with_open_text fname
         (fun chan ->
-          Lexing.from_channel chan
+          run (Lexing.from_channel chan
           |> run_parser fname
           (* |> include_stdlib *)
-          |> Eval.eval_prog
+          |> Eval.eval_prog) M.empty
           |> ignore)
           (* |> Eval.print_value) *)
   (* with

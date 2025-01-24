@@ -84,7 +84,7 @@ stmt:
   | FOR; i = IDENT; ASSGN; e1 = expr; TO; e2 = expr ; COLON ; b = block{ For(i, e1, e2, b) } 
   | PRINT; e = expr ; {Print e}
   | DEF; i = IDENT; LPAREN ; args = idents ; RPAREN ; COLON ; b = block { Function(i, args, b)}
-  | RETURN; e = expr ; {Return e}
+  // | RETURN; e = expr ; {Return e}
   ;
 
 exprs: 

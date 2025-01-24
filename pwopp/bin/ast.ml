@@ -20,7 +20,7 @@ and stmt =
   | Assgn_arr of string * expr list * expr
   | Function of string * string list * stmt
   | Print of expr
-  | Return of expr
+  (* | Return of expr *)
   | If of expr * stmt * stmt
   | Seq of stmt * stmt
                                
