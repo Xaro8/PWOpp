@@ -18,19 +18,21 @@ and 'a hstack = {signal : signal -> 'a ans}
 
 let signal st sg = (st.signal sg) 
 
-let catch_break (m: 'a t) (h: unit -> 'a t) (k : 'a -> 'a ans) (state : state) (st : 'a hstack)  = 
+let catch_break m h k state st  = 
   m.run (fun x state' _-> k x state' st) state { signal = fun sg -> 
     match sg with 
     | SBreak -> (h ()).run k 
     | _ -> st.signal sg
   }
+let catch_breakm (m : 'a t) (h : unit -> 'b t)  : 'b t = {run = fun k state st -> catch_break m h k state st}
 
-let catch_continue (m: 'a t) (h: unit -> 'a t) (k : 'a -> 'a ans) (state: state) (st : 'a hstack)  = 
+let catch_continue m h k  state st  = 
 m.run (fun x state' _ -> k x  state' st) state { signal = fun sg -> 
   match sg with 
   | SContinue -> (h ()).run k
   | _ -> st.signal sg
 }
+let catch_continuem (m : 'a t) (h : unit -> 'b t)  : 'b t = {run = fun k state st -> catch_continue m h k state st}
 
 let catch_return m h k state st = 
   m.run (fun x state' _ -> k x state' st) state { signal = fun sg ->

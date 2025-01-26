@@ -44,6 +44,8 @@ rule token =
   | ":" { COLON }
   | "," { COMMA }
   | "return" {RETURN}
+  | "break" {BREAK}
+  | "continue" {CONTINUE}
   | "def" {DEF}
   | "print" { PRINT }
   | ":=" { ASSGN }
