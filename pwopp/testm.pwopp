@@ -11,11 +11,28 @@ for i:=0 to len:{
 def foo (x,y):{
     x:=x+1;
     print x * y;
+    if (x<5) then foo(x,y) else None; 
+
+
 };
 foo(3,2);
 
 def bar(x,y):{
-    print x(y,y);
+    x(y,y);
 };
+
 bar(foo, 3);
-print ret;
+
+def id(x):{
+    return x;
+};
+
+f:=id(id);
+print f(42);
+
+def fib(n):{
+    if n = 1 then return 1
+    else if n = 0  then return 0
+    else return fib(n - 1) + fib(n - 2)
+};
+print id(5);

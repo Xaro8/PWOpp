@@ -43,7 +43,7 @@ let rec string_of_value v = match v with
   | VBool false -> "false"
   | VFloat f    -> string_of_float f
   | Varr a      -> "[" ^ (Array.to_list a |> List.map string_of_value |> String.concat ", ") ^ "]"
-  | _           -> raise Type_error
+  | VFun _      -> failwith "debug"
 let print_value v = v |> string_of_value |> print_endline
 let rec eval_exp e = match e with  
   | Int a -> return (VInt a)
@@ -91,12 +91,14 @@ and eval_stmt = function
     end 
   | Function (name, args, body) -> 
     get_state >>= fun env -> 
-    let env = M.add name (VFun (args, body)) env in set_state env
+    let env = M.add name (VFun (name, args, body)) env in set_state env
   | Print e -> 
     eval_exp e >>= fun v -> 
     print_value v; return VNone
-  (* | Return exp -> 
-    eval_exp exp >>= fun v -> signal SReturn v  TODO *)
+  | Return exp ->
+    { run = fun _ state st -> 
+      let v = run (eval_exp exp) state in 
+      (signal st (SReturn v)) state st }
   | For (var, starts, ends, st) -> 
     eval_exp starts >>= fun stv ->
     eval_exp ends >>= fun endv ->
@@ -115,11 +117,14 @@ and eval_for var i n st=
 and eval_fun name args = 
   get_state >>= fun env ->
   match M.find_opt name env with 
-  | Some (VFun (args_n, body) as f_o) -> 
-    let env' =  declare_env args_n args env M.empty in 
-    let env' =  M.add name f_o env' in
-    set_state env' >>= fun _ -> 
-    eval_stmt body >>= fun _ -> set_state env 
+  | Some (VFun (name, args_n, body) as f_o) ->   
+    let handler = fun v -> set_state env >>=  fun _ -> return v in
+    let m = (
+      let env' =  declare_env args_n args env M.empty in 
+      let env' =  M.add name f_o env' in
+      set_state env' >>= fun _ -> 
+      eval_stmt body >>= fun _ -> set_state env) in  
+      catch_returnm m handler
   | Some _ -> raise Type_error
   | None   -> raise (Unbound_var name)
 
@@ -165,4 +170,4 @@ and array_op ?set:(set=VNone) arr idxs =
     eval_exp idx >>= fun idx ->
     array_op (help idx arr) idxs
 
-let eval_prog st = eval_stmt st
+let eval_prog st = run (eval_stmt st) M.empty

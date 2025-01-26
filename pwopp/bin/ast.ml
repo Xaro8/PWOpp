@@ -20,7 +20,7 @@ and stmt =
   | Assgn_arr of string * expr list * expr
   | Function of string * string list * stmt
   | Print of expr
-  (* | Return of expr *)
+  | Return of expr
   | If of expr * stmt * stmt
   | Seq of stmt * stmt
                                
@@ -29,5 +29,5 @@ and stmt =
   | VInt of int
   | VBool of bool
   | VFloat of float
-  | VFun of string list * stmt
+  | VFun of string * string list * stmt
   | Varr of value array
