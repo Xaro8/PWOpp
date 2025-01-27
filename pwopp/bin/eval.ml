@@ -101,6 +101,7 @@ and eval_stmt = function
       (signal st (SReturn v)) state st }
   | Break -> {run = fun _ state st -> signal st SBreak state st}
   | Continue -> {run = fun _ state st -> signal st SContinue state st}
+  | While(exp,stmt) ->  eval_while exp stmt
   | For (var, starts, ends, st) -> 
     eval_exp starts >>= fun stv ->
     eval_exp ends >>= fun endv ->
@@ -120,6 +121,15 @@ and eval_for var i n st=
     eval_for var (i + 1) n st 
   else return VNone
   ) in 
+  let m = catch_continuem m hcontinue in 
+  catch_breakm m hbreak
+and eval_while exp st =   
+  let hbreak = fun () -> return VNone in 
+  let hcontinue = fun () -> eval_while exp st in 
+  let m = eval_exp exp >>= fun v ->
+    if (to_float v) <> 0.0  then eval_stmt st >>= fun _  -> eval_while exp st 
+    else return VNone
+  in 
   let m = catch_continuem m hcontinue in 
   catch_breakm m hbreak
 

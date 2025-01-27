@@ -16,6 +16,7 @@ type expr =
 and stmt = 
   | Exp of expr
   | For of string * expr * expr * stmt
+  | While of expr * stmt
   | Assgn of string * expr
   | Assgn_arr of string * expr list * expr
   | Function of string * string list * stmt

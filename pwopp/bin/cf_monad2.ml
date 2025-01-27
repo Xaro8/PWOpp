@@ -10,12 +10,6 @@ type state = value M.t
 type 'a t = { run :'r. ('a -> 'r ans) -> 'r ans }
 and 'a ans = state -> 'a hstack -> 'a
 and 'a hstack = {signal : signal -> 'a ans}
-(* and frame = 
-  | HBreak : (unit -> 'a t) * ('a -> 'a ans) -> frame
-  | HContiniue : (unit -> 'a t) * ('a -> 'a ans) -> frame 
-  | HReturn: ('a -> 'a t) * ('a -> 'a ans) -> frame *)
-
-
 let signal st sg = (st.signal sg) 
 
 let catch_break m h k state st  = 

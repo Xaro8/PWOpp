@@ -36,13 +36,15 @@ def fib(n):{
     else return fib(n - 1) + fib(n - 2)
 };
 
-for x:=0 to 25 :{
+x:=0;
+while true :{
     print x;
     if x = 8 then break
     else {
+        x:=x+1;
         continue;
         print 42;
         continue;
     };
-} ;
+};
 print id(5);

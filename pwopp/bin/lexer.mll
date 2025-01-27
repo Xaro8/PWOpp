@@ -47,6 +47,7 @@ rule token =
   | "break" {BREAK}
   | "continue" {CONTINUE}
   | "def" {DEF}
+  | "while" {WHILE}
   | "print" { PRINT }
   | ":=" { ASSGN }
   | "None" { NONE }

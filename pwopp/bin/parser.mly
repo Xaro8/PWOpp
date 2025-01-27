@@ -39,6 +39,7 @@ open Ast
 %token ELSE
 
 %token FOR
+%token WHILE
 %token TO
 %token COLON
 %token PRINT
@@ -84,6 +85,7 @@ stmt:
   | i = IDENT ; ASSGN ; e = expr { Assgn(i,e) }
   | name = IDENT ; idxs = arr_idxs; ASSGN ; e = expr { Assgn_arr(name,idxs,e) }
   | FOR; i = IDENT; ASSGN; e1 = expr; TO; e2 = expr ; COLON ; b = block{ For(i, e1, e2, b) } 
+  | WHILE; e = expr; COLON ; b = block {While(e,b)}
   | PRINT; e = expr ; {Print e}
   | DEF; i = IDENT; LPAREN ; args = idents ; RPAREN ; COLON ; b = block { Function(i, args, b)}
   | RETURN; e = expr ; {Return e}
