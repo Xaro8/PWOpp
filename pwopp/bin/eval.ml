@@ -68,12 +68,12 @@ let rec eval_exp e = match e with
     match M.find_opt x env with
     | Some v -> return v
     | None -> raise (Unbound_var x) 
-and eval_stmt = function 
+and eval_stmt (inf : bool) = function 
   | Exp e -> eval_exp e 
-  | Seq (st1, st2) -> eval_stmt st1 >>= fun _ -> eval_stmt st2  
+  | Seq (st1, st2) -> eval_stmt inf st1 >>= fun _ -> eval_stmt inf st2 
   | If (e, st1, st2) -> 
     eval_exp e >>= fun v -> 
-      if (to_float v) <> 0.0 then eval_stmt st1 else eval_stmt st2    
+      if (to_float v) <> 0.0 then eval_stmt inf st1 else eval_stmt inf st2    
   | Assgn (var, e) -> 
     eval_exp e  >>= fun v ->
     get_state >>= fun env ->
@@ -90,8 +90,11 @@ and eval_stmt = function
       | None -> failwith ("Undefined array: " ^ name)
     end 
   | Function (name, args, body) -> 
-    get_state >>= fun env -> 
-    let env = M.add name (VFun (name, args, body)) env in set_state env
+    if inf then failwith ("You can't define function '" ^ name ^  "' inside other function. Sorry ;(")
+    else
+      get_state >>= fun env -> 
+      let env = M.add name (VFun (name, args, body)) env 
+      in set_state env
   | Print e -> 
     eval_exp e >>= fun v -> 
     print_value v; return VNone
@@ -101,40 +104,37 @@ and eval_stmt = function
       (signal st (SReturn v)) state st }
   | Break -> {run = fun _ state st -> signal st SBreak state st}
   | Continue -> {run = fun _ state st -> signal st SContinue state st}
-  | While(exp,stmt) ->  eval_while exp stmt
+  | While(exp,stmt) ->  eval_while exp stmt inf
   | For (var, starts, ends, st) -> 
     eval_exp starts >>= fun stv ->
     eval_exp ends >>= fun endv ->
     begin match stv, endv with 
-      | VInt i, VInt n -> eval_for var i n st
+      | VInt i, VInt n -> eval_for var i n st inf
       | _ -> raise Not_iterable
     end
-and eval_for var i n st=   
+and eval_for var i n st inf =   
   let hbreak = fun () -> return VNone in 
-  let hcontinue = fun () -> eval_for var (i+1) n st in 
+  let hcontinue = fun () -> eval_for var (i+1) n st inf in 
   let m = (
     if i < n then 
     get_state >>= fun env ->
     let env = M.add var (VInt i) env in
     set_state env >>= fun _ ->
-    eval_stmt st >>= fun _  ->
-    eval_for var (i + 1) n st 
+    eval_stmt inf st >>= fun _  ->
+    eval_for var (i + 1) n st inf
   else return VNone
   ) in 
   let m = catch_continuem m hcontinue in 
   catch_breakm m hbreak
-and eval_while exp st =   
+and eval_while exp st inf =   
   let hbreak = fun () -> return VNone in 
-  let hcontinue = fun () -> eval_while exp st in 
+  let hcontinue = fun () -> eval_while exp st inf in 
   let m = eval_exp exp >>= fun v ->
-    if (to_float v) <> 0.0  then eval_stmt st >>= fun _  -> eval_while exp st 
+    if (to_float v) <> 0.0  then eval_stmt inf st >>= fun _  -> eval_while exp st inf
     else return VNone
   in 
   let m = catch_continuem m hcontinue in 
   catch_breakm m hbreak
-
-  
-
 and eval_fun name args = 
   get_state >>= fun env ->
   match M.find_opt name env with 
@@ -144,11 +144,10 @@ and eval_fun name args =
       let env' =  declare_env args_n args env M.empty in 
       let env' =  M.add name f_o env' in
       set_state env' >>= fun _ -> 
-      eval_stmt body >>= fun _ -> set_state env) in  
+      eval_stmt true body >>= fun _ -> set_state env) in  
       catch_returnm m handler
   | Some _ -> raise Type_error
   | None   -> raise (Unbound_var name)
-
 and declare_env args_n args env ret : value M.t = 
   match args_n, args with
   | n :: args_n, v :: args -> 
@@ -191,4 +190,4 @@ and array_op ?set:(set=VNone) arr idxs =
     eval_exp idx >>= fun idx ->
     array_op (help idx arr) idxs
 
-let eval_prog st = run (eval_stmt st) M.empty
+let eval_prog st = run (eval_stmt false st) M.empty
