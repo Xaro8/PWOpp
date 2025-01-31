@@ -2,7 +2,9 @@
  (public_name pwopp)
  (name pwopp)
  (modes byte exe)
- (libraries pwopp))
+ (libraries pwopp unix)
+)
+
 
 (menhir (modules parser))
 
