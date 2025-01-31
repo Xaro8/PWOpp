@@ -1,6 +1,5 @@
 open Unix
-
-type 'a history = 'a list * 'a list 
+open Zipper
 
 type inp = 
   | Normal of char
@@ -8,18 +7,6 @@ type inp =
   | Endl
   | Backspace
   | Nothing
-let get_prev hist el = 
-  match hist with
-  | x::prev, next ->if el <> [] && el <> ['\n'] then Some x, (prev, el::next) else Some x, (prev, next)
-  | [], next -> if el <> [] && el <> ['\n'] then None, ([],el::next)  else None, ([],next)
-let get_next hist el = 
-    match hist with
-    | prev, x::next ->if el <> [] && el <> ['\n'] then Some x, (el::prev, next) else Some x, (prev, next)
-    | prev, [] -> if el <> [] && el <> ['\n'] then None, (el::prev,[])  else None, (prev,[])
-  
-let add_prev hist el = hist |> fst |> List.cons el, snd hist
-let add_next hist el = fst hist, hist |> snd |> List.cons el
-
 let set_raw_mode enable =
   let termio = tcgetattr stdin in
   let new_termio =
@@ -29,7 +16,6 @@ let set_raw_mode enable =
       { termio with c_icanon = true; c_echo = true }
   in
   tcsetattr stdin TCSAFLUSH new_termio
-
 let read_sym () : inp =
   let buf = Bytes.create 3 in
   let _ = read stdin buf 0 1 in
@@ -48,13 +34,11 @@ let read_sym () : inp =
       print_char ch;
       flush Stdlib.stdout;
       if Char.equal ch '\n' then Endl else Normal ch
-  
 let rec list_fcrop xs v =
   match xs with 
     | [] -> [], false
     | x::_ when x = v -> [x], true
     | x::xs -> let l,b = list_fcrop xs v in x::l,b
-  
 let numberoflines st : int =
     String.fold_left (fun acc a-> if a = '\n' then acc + 1 else acc) 0 st
 let string_of_list li = li |> List.rev |> List.to_seq |> String.of_seq 
@@ -62,14 +46,13 @@ let c_code n =
   if n > 0  then "\027[G" ^ "\027[" ^ Int.to_string n ^ "A" ^ "\027[0J"  
   else "\027[G\027[0J"
 let gen_code prev =  string_of_list prev |> numberoflines |> c_code 
-
-let rec create_string acc hist= 
+let rec create_string (acc : 'a zip) (hist : 'a zip zip) = 
   match read_sym() with 
-  | Normal x -> create_string (x::acc) hist
-  | Endl -> let s,b = list_fcrop (List.rev acc) ';' in 
-    if b then (List.rev s), hist else create_string ('\n'::(List.rev s)) hist 
-  | Up ->   update acc (get_prev hist acc)
-  | Down -> update acc (get_next hist acc)
+  | Normal x -> create_string (add_prev x acc ) hist
+  | Endl -> let s,b = list_fcrop (List.rev (unzip acc)) ';' in 
+    if b then zip(List.rev s), hist else create_string (zip('\n'::(List.rev s))) hist 
+  | Up ->   update acc (get_prev acc hist)
+  | Down -> update acc (get_next acc hist)
   | Backspace -> print_string "\b \b"; flush Stdlib.stdout; create_string (try List.tl acc with _ -> []) hist
   | Nothing -> create_string acc hist
   | _ -> failwith "sex"
@@ -80,10 +63,9 @@ and update prev v =
     acc |> string_of_list |> print_string; flush Stdlib.stdout;
     create_string acc hist
   | None, hist -> flush Stdlib.stdout; create_string [] hist
-  
 let rec loop hist = 
-  let str, _ = create_string [] hist in 
-  let hist = add_prev hist str in 
+  let str, _ = create_string ([],[]) hist in 
+  let hist = add_prev str hist in 
   let str = string_of_list str in
   (* let str = "\n" ^ str in 
   print_endline str;  *)
