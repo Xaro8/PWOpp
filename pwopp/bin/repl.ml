@@ -40,33 +40,33 @@ let rec list_fcrop xs v =
     | x::_ when x = v -> [x], true
     | x::xs -> let l,b = list_fcrop xs v in x::l,b
 let numberoflines st : int =
-    String.fold_left (fun acc a-> if a = '\n' then acc + 1 else acc) 0 st
+    List.fold_left (fun acc a-> if a = '\n' then acc + 1 else acc) 0 st
 let string_of_list li = li |> List.rev |> List.to_seq |> String.of_seq 
 let c_code n = 
   if n > 0  then "\027[G" ^ "\027[" ^ Int.to_string n ^ "A" ^ "\027[0J"  
   else "\027[G\027[0J"
-let gen_code prev =  string_of_list prev |> numberoflines |> c_code 
+let gen_code prev =  prev |> unzip |> numberoflines |> c_code 
 let rec create_string (acc : 'a zip) (hist : 'a zip zip) = 
   match read_sym() with 
   | Normal x -> create_string (add_prev x acc ) hist
-  | Endl -> let s,b = list_fcrop (List.rev (unzip acc)) ';' in 
-    if b then zip(List.rev s), hist else create_string (zip('\n'::(List.rev s))) hist 
+  | Endl -> let s,b = list_fcrop (unzip acc) ';' in 
+    if b then zip s, hist else create_string (zip(s@['\n'])) hist 
   | Up ->   update acc (get_prev acc hist)
   | Down -> update acc (get_next acc hist)
-  | Backspace -> print_string "\b \b"; flush Stdlib.stdout; create_string (try List.tl acc with _ -> []) hist
+  | Backspace -> print_string "\b \b"; flush Stdlib.stdout; create_string (try List.tl (fst acc),snd acc with _ -> acc) hist
   | Nothing -> create_string acc hist
   | _ -> failwith "sex"
 and update prev v = 
   prev |> gen_code |> print_string ; 
   match  v with
   | Some acc, hist  ->  
-    acc |> string_of_list |> print_string; flush Stdlib.stdout;
+    acc |> unzip_to_str |> print_string; flush Stdlib.stdout;
     create_string acc hist
-  | None, hist -> flush Stdlib.stdout; create_string [] hist
+  | None, hist -> flush Stdlib.stdout; create_string ([],[]) hist
 let rec loop hist = 
   let str, _ = create_string ([],[]) hist in 
   let hist = add_prev str hist in 
-  let str = string_of_list str in
+  let str = unzip_to_str str in
   (* let str = "\n" ^ str in 
   print_endline str;  *)
   if String.equal str "exit;" then () else loop hist
