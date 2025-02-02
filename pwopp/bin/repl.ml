@@ -1,5 +1,6 @@
 open Unix
 open Zipper
+open Cf_monad2
 
 type inp = 
   | Normal of char
@@ -27,77 +28,96 @@ let read_sym () : inp =
       | "\027[B" -> Down
       | "\027[C" -> Right
       | "\027[D" -> Left
-      | s -> print_string s; flush Stdlib.stdout; Nothing  
+      | s -> print_string s;flush Stdlib.stdout; Nothing  
       end
   | '\x7F' -> Backspace  
-  | ch ->
-      print_char ch;
-      flush Stdlib.stdout;
-      if Char.equal ch '\n' then Endl else Normal ch
+  | '\n'   -> Endl 
+  | ch     -> Normal ch
 let rec list_fcrop xs v =
   match xs with 
     | [] -> [], false
-    | x::_ when x = v -> [x], true
-    | x::xs -> let l, b = list_fcrop xs v in x::l, b
-let numberoflines st : int =
-    List.fold_left (fun acc a-> if a = '\n' then acc + 1 else acc) 0 st
-let rec distfromlast st = 
-  match st with 
-  | [] -> 0
-  | '\n' :: _ -> 0
-  | _ :: st -> 1 + distfromlast st
-let string_of_list li = li |> List.rev |> List.to_seq |> String.of_seq 
+    | x:: _ when x = v -> xs, true
+    | '\n'::xs -> 
+      let l, b = list_fcrop xs v in '\n'::l, b 
+    | x::xs -> 
+      let l, b = list_fcrop xs v in 
+      if b then l, b
+      else x::l, b 
+      
+let string_of_list li = li |> List.to_seq |> String.of_seq 
 let c_code n = 
   if n > 0  then "\027[G" ^ "\027[" ^ Int.to_string n ^ "A" ^ "\027[0J"  
   else "\027[G\027[0J"
-let gen_code prev =  prev |> unzip |> numberoflines |> c_code 
 let printf str = print_string str; flush Stdlib.stdout
+let erase_all prev = prev |> unzip |> numberoflines |> c_code |> printf
 
-let rec create_string (acc : 'a zip) (hist : 'a zip zip) = 
+let rec create_string (acc : 'a zip) (hist : 'a zip zip) br = 
   match read_sym() with 
   | Normal x -> 
-    printf "\027[0J"; 
-    let tpr = acc |> snd |> List.rev |> string_of_list in
-    let n = String.length tpr in 
-    print_string tpr; 
-    if n > 0 then Printf.printf "\027[%nD" n;
-    flush Stdlib.stdout; 
-    create_string (add_prev x acc ) hist
-  | Endl -> let s,b = list_fcrop (unzip acc) ';' in 
-    if b then zip s, hist else create_string (zip(s@['\n'])) hist 
-  | Up ->   update acc (get_prev acc hist)
-  | Down -> update acc (get_next acc hist)
-  | Backspace -> printf "\b \b"; create_string (try List.tl (fst acc),snd acc with _ -> acc) hist
-  | Nothing -> create_string acc hist
+    erase_all acc;
+    let acc = add_prev x acc in 
+    print_z acc true;
+    if x = '{'      then create_string acc hist (br+1)
+    else if x = '}' then create_string acc hist (max (br-1) 0)
+    else create_string acc hist br
+  | Endl -> 
+    erase_all acc;
+    let acc = add_prev '\n' acc in 
+    print_z acc true;
+    let s, b = list_fcrop (acc |> unzip |> List.rev) ';' in 
+    let s =  List.rev s in 
+    (* print_endline (Bool.to_string b); *)
+    if b  then zip s, hist , br
+          else create_string (zip s) hist br
+  | Up ->   update acc (get_prev acc hist) br
+  | Down -> update acc (get_next acc hist) br
+  | Backspace -> 
+    erase_all acc;
+    let acc = (try List.tl (fst acc),snd acc with _ -> acc) in  
+    print_z acc true;
+    create_string acc hist br 
+  | Nothing -> create_string acc hist br
   | Left -> 
     begin match acc with 
-      | [],_ -> create_string acc hist
-      | '\n'::prev,next -> Printf.printf "\027[F\027[%nC" (distfromlast prev); flush Stdlib.stdout; create_string (prev,'\n'::next) hist
-      | x::prev,next -> printf "\027[D"; create_string (prev,x::next) hist
+      | [], _ -> create_string acc hist br
+      | '\n'::prev, next -> 
+        Printf.printf "\027[F\027[%nC" (distfromlast prev); 
+        flush Stdlib.stdout; 
+        create_string (prev,'\n'::next) hist br
+      | x::prev, next -> printf "\027[D"; create_string (prev,x::next) hist br
     end
   | Right ->
     begin match acc with 
-      | _,[] -> create_string acc hist
-      | prev,'\n'::next -> printf "\027[E"; create_string ('\n'::prev,next) hist
-      | prev,x::next -> printf "\027[C"; create_string (x::prev,next) hist
+      | _, [] -> create_string acc hist br
+      | prev,'\n'::next -> printf "\027[E"; create_string ('\n'::prev,next) hist br
+      | prev, x::next   -> printf "\027[C"; create_string (x::prev,next) hist br
     end 
-and update prev v = 
-  prev |> gen_code |> printf; 
+and update prev v br = 
+  erase_all prev;
   match  v with
-  | Some acc, hist  ->  
-    acc |> unzip_to_str |> printf;
-    create_string acc hist
-  | None, hist -> create_string ([],[]) hist
-let rec loop hist = 
-  let str, _ = create_string ([],[]) hist in 
-  let hist = add_prev str hist in 
-  let str = unzip_to_str str in
-  (* let str = "\n" ^ str in 
-  print_endline str;  *)
-  if String.equal str "exit;" then () else loop hist
+  | Some acc, hist  ->  print_z acc false; create_string acc hist br
+  | None, hist -> create_string ([],[]) hist br
+
+let repl state input  =
+  let input = unzip_to_str input in
+  if input = "exit;" then exit 0;
+  let lexbuf = Lexing.from_string input in
+  let stmt = Parser.prog Lexer.token lexbuf in
+  let mon = Eval.eval_stmt false stmt >>= fun v ->
+    (Eval.print_value v;print_endline("-------------------------"); get_state)
+  in run mon state 
+ 
+let rec loop (hist : char zip zip) (br : int) prompt (state:state) : unit = 
+  let str, _, br = create_string prompt hist br in 
+  if br = 0 then 
+    let str = List.tl (fst str), snd(str) in 
+    repl state str |> loop (add_prev str hist) 0 ([],[])
+  else loop hist br str state
+ 
 let run () =
   set_raw_mode true; 
+  print_endline "Hello from pwopp REPL! :)\n------------------------- ";
   try 
-    loop ([],[]);
+    loop ([], []) 0 ([],[]) M.empty; 
     set_raw_mode false 
   with _ -> set_raw_mode false
