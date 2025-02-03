@@ -33,9 +33,12 @@ let print_t acc =
   let tpr = acc |> snd |> List.to_seq |> String.of_seq  in
   print_string ("\027[s"^tpr^"\027[u"); flush stdout
     
-let print_z acc preserve= 
+let print_z acc preserve = 
   if preserve then begin
       acc |> fst |> List.rev |> List.to_seq |> String.of_seq |> print_string ; 
       print_t acc
     end
   else  acc |> unzip_to_str |> print_string; flush stdout 
+
+let find_z z ch =  
+  List.exists (Char.equal ch) (fst z) ||  List.exists (Char.equal ch) (snd z)

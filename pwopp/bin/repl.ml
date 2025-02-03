@@ -32,17 +32,7 @@ let read_sym () : inp =
       end
   | '\x7F' -> Backspace  
   | '\n'   -> Endl 
-  | ch     -> Normal ch
-let rec list_fcrop xs v =
-  match xs with 
-    | [] -> [], false
-    | x:: _ when x = v -> xs, true
-    | '\n'::xs -> 
-      let l, b = list_fcrop xs v in '\n'::l, b 
-    | x::xs -> 
-      let l, b = list_fcrop xs v in 
-      if b then l, b
-      else x::l, b 
+  | ch     -> Normal ch  
       
 let string_of_list li = li |> List.to_seq |> String.of_seq 
 let c_code n = 
@@ -74,11 +64,8 @@ let rec create_string (acc : 'a zip) (hist : 'a zip zip) =
     erase_all acc;
     let acc = add_prev '\n' acc in 
     print_z acc true;
-    let s, b = list_fcrop (acc |> unzip |> List.rev) ';' in 
-    let s =  List.rev s in 
-    (* print_endline (Bool.to_string b); *)
-    if b  then zip s, hist
-          else create_string (zip s) hist 
+    if find_z acc ';'  then acc, hist
+    else create_string acc hist 
   | Up ->   update acc (get_prev acc hist)
   | Down -> update acc (get_next acc hist)
   | Backspace -> 
@@ -117,7 +104,8 @@ let repl state input  =
   let lexbuf = Lexing.from_string input in
   let stmt = Parser.prog Lexer.token lexbuf in
   let mon = Eval.eval_stmt false stmt >>= fun v ->
-    ( Eval.print_value v;
+    ( print_newline ();
+      Eval.print_value v;
       print_endline(!disp); 
       get_state)
   in run mon state 
@@ -130,12 +118,23 @@ let closed zip : bool =
   in (List.fold_left help 0 (unzip zip)) = 0
   
 let rec loop (hist : char zip zip) prompt (state:state) : unit = 
-  let str, _ = create_string prompt hist in 
-  if closed(str) then 
-    let str = List.tl (fst str), snd(str) in 
-    repl state str |> loop (add_prev str hist) ([],[])
-  else loop hist str state
-
+  try 
+    let str, _ = create_string prompt hist in 
+    if closed str then 
+      (erase_all str;
+      let str = List.rev (snd str) @  (List.tl (fst str)) ,[] in 
+      print_z str false; 
+      repl state str |> loop (add_prev str hist) ([],[]))
+    else loop hist str state
+  with 
+    | Parser.Error -> 
+      print_endline "\n input couldn't be parsed"; 
+      print_endline(!disp); 
+      loop hist ([],[]) state
+    | Eval.Unbound_var x -> 
+      print_endline ("\n input contains unbound variable: " ^ "<" ^ x ^ ">");
+      print_endline(!disp); 
+      loop hist ([],[]) state
 
 let run () =
   set_raw_mode true; 
@@ -146,7 +145,6 @@ let run () =
   Printf.printf "\027[%nC" ((wd - String.length tpr)/2);
   print_endline (tpr);
   print_endline !disp; 
-  try 
-    loop ([], []) ([],[]) M.empty; 
-    set_raw_mode false 
-  with _ -> set_raw_mode false
+  
+  loop ([], []) ([],[]) M.empty; 
+  set_raw_mode false 

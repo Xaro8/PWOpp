@@ -43,7 +43,7 @@ let rec string_of_value v = match v with
   | VBool false -> "false"
   | VFloat f    -> string_of_float f
   | Varr a      -> "[" ^ (Array.to_list a |> List.map string_of_value |> String.concat ", ") ^ "]"
-  | VFun _      -> failwith "debug"
+  | VFun (name,args,_)  -> "funxtion: " ^ name ^ " (" ^ String.concat ", " args ^ ")"
 let print_value v = v |> string_of_value |> print_endline
 let rec eval_exp e = match e with  
   | Int a -> return (VInt a)

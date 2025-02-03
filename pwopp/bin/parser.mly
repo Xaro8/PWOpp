@@ -121,6 +121,7 @@ arr_idxs:
   
 base:
   | i = INT { Int i }
+  | MINUS; i = INT {Int (-i)}
   | f = FLOAT { Float f}
   | i = IDENT { Var i }
   | i = IDENT; LPAREN ; arg = exprs ; RPAREN {Call(i,arg)}
