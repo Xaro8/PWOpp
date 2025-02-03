@@ -23,7 +23,7 @@ let get_next (el :'a zip) (hist: 'a zip zip) =
     | prev, x::next ->if el <> [] && el <> ['\n'] then Some x, ((zip el)::prev, next) else Some x, (prev, next)
     | prev, [] -> if el <> [] && el <> ['\n'] then None, ((zip el)::prev,[])  else None, (prev,[])
 let numberoflines st : int =
-  List.fold_left (fun acc a-> if a = '\n' then acc + 1 else acc) 0 st
+  List.fold_left (fun acc a -> if a = '\n' then acc + 1 else acc) 0 st
 let rec distfromlast st = 
   match st with 
   | [] -> 0
@@ -31,15 +31,7 @@ let rec distfromlast st =
   | _ :: st -> 1 + distfromlast st
 let print_t acc = 
   let tpr = acc |> snd |> List.to_seq |> String.of_seq  in
-  (* let ls = acc |> snd |> numberoflines in 
-  if ls =  0 then 
-    let n = String.length tpr in  *)
-    print_string "\027[s";print_string tpr;print_string "\027[u";
-    (* if n > 0 then Printf.printf "\027[%nD" n else ()
-  else 
-     *)
-
-  flush Stdlib.stdout
+  print_string ("\027[s"^tpr^"\027[u"); flush stdout
     
 let print_z acc preserve= 
   if preserve then begin
